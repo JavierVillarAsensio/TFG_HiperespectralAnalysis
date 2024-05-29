@@ -1,6 +1,5 @@
 /*
-    La lectura es bil, lo que quiere decir que lee
-    el primer pixel de cada banda, luego el segundo...
+    The format is bil so it is read the firstpixel of every channel
 */
 
 
@@ -29,8 +28,11 @@
 #define WAVELENGTH_FIELD "wavelength"
 #define END_FIELD "}"
 
-#define SPECTRUM_FIRST_VALUE_FIELD "First"
-#define SPECTRUM_LAST_VALUE_FIELD "Last" 
+#define SPECTRUM_FIRST_VALUE_FIELD "First X Value"
+#define SPECTRUM_LAST_VALUE_FIELD "Last X Value" 
+
+#define ASC 2   // 0 and 1 are EXIT_SUCCESS and EXIT_FAILURE
+#define DESC 3
 
 using namespace std;
 
@@ -98,28 +100,44 @@ int read_hdr(float *channels){
     return EXIT_SUCCESS;
 }
 
-int main(){
-
+int read_spectrum(float initial_wavelength, float final_wavelength, float *reflectances){
     ifstream file(WATER_PATH);
     if(!file.is_open()){
         cout << "Error opening the file, it could not be opened. Aborting." << endl;
         return(EXIT_FAILURE);
     }
 
-    string line;
-    string first;
-    int index = 0;
-    while (index < 25) {
-        getline(file, line);
+    string line, segment;
+    float first_value, last_value;
+    while (getline(file, line)) {
         istringstream line_stream(line);
-        line_stream >> first;
-        if (first == SPECTRUM_FIRST_VALUE_FIELD){
-            while(line_stream >> first);
-            cout << "Value: ";
+        
+        getline(line_stream, segment, ':');
+        if (segment == SPECTRUM_FIRST_VALUE_FIELD){
+            getline(line_stream, segment, ':');
+            first_value = stof(segment);
         }
-        cout << first << endl;
-        index++;
+        if (segment == SPECTRUM_LAST_VALUE_FIELD){
+            getline(line_stream, segment, ':');
+            last_value = stof(segment);
+            break;
+        }
     }
+
+
+    file.close();
+    if (first_value > last_value)
+        return DESC;
+    else
+        return ASC;
+}
+
+int main(){
+
+    float *reflectances = (float*)malloc(CHANNELS * sizeof(float));
+    int spectrum_wavelengths_order = read_spectrum(0, 0, reflectances);
+    if (spectrum_wavelengths_order == EXIT_FAILURE)
+        return EXIT_FAILURE;
 
     /*
     float *channels = (float*)malloc(CHANNELS * sizeof(float));
