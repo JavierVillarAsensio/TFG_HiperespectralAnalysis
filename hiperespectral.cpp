@@ -12,6 +12,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <vector>
 
 #define WIDTH 100
 #define HEIGHT 100
@@ -20,6 +21,8 @@
 
 #define IMG_PATH "jasperRidge2_R198/jasperRidge2_R198.img"
 #define HDR_PATH "jasperRidge2_R198/jasperRidge2_R198.hdr"
+
+#define SPECTRUMS_FILE "spectrums.txt"
 
 #define ROAD_PATH "spectrums/manmade.concrete.pavingconcrete.solid.all.0092uuu_cnc.jhu.becknic.spectrum.txt"
 #define SOIL1_PATH "spectrums/soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic.spectrum.txt"
@@ -183,7 +186,6 @@ void save_reflectances(ifstream& file, float previous_reflectance, float previou
 int read_spectrum(float initial_wavelength, float final_wavelength, float *reflectances, float *wavelengths, string path){
     int number_of_reflectances, order;
     float reflectance_read, previous_reflectance, reflectance, previous_diff, diff, wavelength_read, previous_wavelength;
-    streampos begin_pointer;
 
     ifstream file(path);
     if(!file.is_open()){
@@ -223,28 +225,37 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
     return EXIT_SUCCESS;
 }
 
+void collect_spectrums_names(std::vector<string> *paths){
+    ifstream file(SPECTRUMS_FILE);
+    string name;
+    int pos = 0;
+
+    while(getline(file, name)){
+        paths->push_back(name);
+        pos++;
+    }
+}
+
 int main(){
 
     float *reflectances = (float*)malloc(CHANNELS * sizeof(float));
     float *channels = (float*)malloc(CHANNELS * sizeof(float));
     float *image = (float*)malloc(n_pixels * sizeof(float));
+    std::vector<string> paths;
+
+    collect_spectrums_names(&paths);
 
     if (read_hdr(channels) == EXIT_FAILURE)
         return EXIT_FAILURE;  
 
-    int spectrum_wavelengths_order = read_spectrum(channels[0], channels[CHANNELS - 1], reflectances, channels, TREE_PATH);
-    if (spectrum_wavelengths_order == EXIT_FAILURE)
+    if (read_spectrum(channels[0], channels[CHANNELS - 1], reflectances, channels, TREE_PATH) == EXIT_FAILURE)
         return EXIT_FAILURE;  
     
-    
-    for(int i = 0; i < CHANNELS; i++){
-        cout << i << ": " << reflectances[i] << endl;
-    }
     /*
     if (read_img(image) == EXIT_FAILURE)
         return EXIT_FAILURE;
     */
-    
+
     cout << "Freeing reflectances..." << endl;
     free(reflectances);
     cout << "Freeing imgage..." << endl;
