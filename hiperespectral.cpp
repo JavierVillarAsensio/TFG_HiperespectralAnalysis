@@ -112,7 +112,7 @@ int read_hdr(float *wavelengths){
 
 int read_spectrum(float initial_wavelength, float final_wavelength, float *reflectances, float *wavelengths, string path){
     int number_of_reflectances, order;
-    float reflectance_read, previous_reflectance, reflectance, previous_diff, diff, wavelength_read;
+    float reflectance_read, previous_reflectance, reflectance, previous_diff, diff, wavelength_read, previous_wavelength;
     streampos begin_pointer;
 
     ifstream file(path);
@@ -157,15 +157,15 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
             if(segment.length() == 0)
                 getline(line_stream, segment, ' ');
 
-            if(stof(segment) <= final_wavelength){
-                previous_diff = stof(segment) - last_value;
+            previous_wavelength = stof(segment);
+            if(previous_wavelength <= final_wavelength){
+                previous_diff = previous_wavelength - final_wavelength;
                 getline(line_stream, segment, ' ');
                 previous_reflectance = stof(segment);
                 break;
             }
         }
-        
-        cout << "prev refl: " << previous_reflectance << endl << endl;
+
         int iter = 0;
         while(getline(file, line)){
             istringstream line_stream(line);
@@ -179,17 +179,17 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
             diff = abs(wavelengths[wavelengths_position] - wavelength_read);
             cout << "wave read: " << wavelength_read << endl << "wave prev: " << wavelengths[wavelengths_position] << endl << "diff: " << diff << endl;
             cout << "prev diff: " << previous_diff << endl;
-            cout << "reflectance: " << reflectance << endl;
+            cout << "reflectance: " << previous_reflectance << endl;
             if (diff < previous_diff){
                 previous_diff = diff;
                 getline(line_stream, segment, ' ');
                 reflectance_read = stof(segment);
-                reflectance = reflectance_read;
-                cout << "nueva reflectance: " << reflectance << endl;
+                previous_reflectance = reflectance_read;
+                cout << "nueva reflectance: " << previous_reflectance << endl;
             }
             else {
-                reflectances[reflectances_position] = reflectance;
-                cout << "se guarda: " << reflectances[reflectances_position] << endl;
+                reflectances[reflectances_position] = previous_reflectance;
+                cout << "se guarda: " << reflectances[reflectances_position] << "en: " << reflectances_position << endl << endl;
                 if(wavelengths_position > 0){
                     wavelengths_position--;
                     diff = FLOAT_MAX;
@@ -198,11 +198,7 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
                     break;
             }
 
-            if(iter == 5){
-                break;
-            }
-            iter++;
-            cout << endl;
+            
         }
     }
     else if(order == ASC){
@@ -270,6 +266,7 @@ int main(){
     int spectrum_wavelengths_order = read_spectrum(channels[0], channels[CHANNELS - 1], reflectances, channels, WATER_PATH);
     if (spectrum_wavelengths_order == EXIT_FAILURE)
         return EXIT_FAILURE;  
+    
     /*
     for(int i = 0; i < CHANNELS; i++){
         cout << i << ": " << reflectances[i] << endl;
