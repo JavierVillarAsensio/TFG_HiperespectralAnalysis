@@ -110,6 +110,68 @@ int read_hdr(float *wavelengths){
     return EXIT_SUCCESS;
 }
 
+void save_reflectances(ifstream& file, float previous_reflectance, float previous_diff, float *wavelengths, float *reflectances, int order){
+    string line, segment;
+    int reflectances_position = 0, wavelengths_position = CHANNELS - 1;
+    float final_wavelength = wavelengths[CHANNELS - 1], previous_wavelength, wavelength_read, diff, reflectance_read;
+
+    while (getline(file, line)){ 
+        istringstream line_stream(line);
+
+        getline(line_stream, segment, ' ');
+        if(segment.length() == 0)
+            getline(line_stream, segment, ' ');
+
+        previous_wavelength = stof(segment);
+        if(previous_wavelength <= final_wavelength){
+            previous_diff = abs(previous_wavelength - final_wavelength);
+            getline(line_stream, segment, ' ');
+            previous_reflectance = stof(segment);
+            break;
+        }
+    }
+
+    while(getline(file, line)){
+        istringstream line_stream(line);
+
+        getline(line_stream, segment, ' ');
+        if(segment.length() == 0)
+            getline(line_stream, segment, ' ');
+        wavelength_read = stof(segment);
+
+        diff = abs(wavelengths[wavelengths_position] - wavelength_read);
+        if (diff < previous_diff){
+            previous_diff = diff;
+            getline(line_stream, segment, ' ');
+            reflectance_read = stof(segment);
+            previous_reflectance = reflectance_read;
+        }
+        else {
+            reflectances[reflectances_position] = previous_reflectance;
+            reflectances_position++;
+            if(wavelengths_position >= 0){
+                wavelengths_position--;
+                previous_diff = FLOAT_MAX;
+            }
+            else 
+                break;                                                                  
+        }
+        reflectances[reflectances_position] = previous_reflectance;
+    } 
+
+    
+    if (order == DESC) {
+        int swap_index = CHANNELS - 1;
+        float *swap = (float*)malloc(CHANNELS * sizeof(float));
+        memcpy(swap, reflectances, CHANNELS * sizeof(float));
+        for(int i = 0; i < CHANNELS; i++){
+            reflectances[swap_index] = swap[i];
+            swap_index--;
+        }
+        free(swap);
+    }                                
+}
+
 int read_spectrum(float initial_wavelength, float final_wavelength, float *reflectances, float *wavelengths, string path){
     int number_of_reflectances, order;
     float reflectance_read, previous_reflectance, reflectance, previous_diff, diff, wavelength_read, previous_wavelength;
@@ -147,114 +209,12 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
     else
         order = ASC;
 
-    int reflectances_position = 0, wavelengths_position;
-    if(order == DESC){
-        wavelengths_position = CHANNELS - 2;
-        while (getline(file, line)){ 
-            istringstream line_stream(line);
+    cout << "order: " << order << endl;
 
-            getline(line_stream, segment, ' ');
-            if(segment.length() == 0)
-                getline(line_stream, segment, ' ');
+    save_reflectances(file, previous_reflectance, previous_diff, wavelengths, reflectances, order);
 
-            previous_wavelength = stof(segment);
-            if(previous_wavelength <= final_wavelength){
-                previous_diff = abs(previous_wavelength - final_wavelength);
-                getline(line_stream, segment, ' ');
-                previous_reflectance = stof(segment);
-                break;
-            }
-        }
-
-        int iter = 0;
-        while(getline(file, line)){
-            istringstream line_stream(line);
-
-            getline(line_stream, segment, ' ');
-            if(segment.length() == 0)
-                getline(line_stream, segment, ' ');
-            wavelength_read = stof(segment);
-
-            diff = abs(wavelengths[wavelengths_position] - wavelength_read);
-            if (diff < previous_diff){
-                previous_diff = diff;
-                getline(line_stream, segment, ' ');
-                reflectance_read = stof(segment);
-                previous_reflectance = reflectance_read;
-            }
-            else {
-                reflectances[reflectances_position] = previous_reflectance;
-                reflectances_position++;
-                if(wavelengths_position >= 0){
-                    wavelengths_position--;
-                    previous_diff = FLOAT_MAX;
-                }
-                else 
-                    break;                                                                  
-            }
-        }
-        /*
-            as the wavelengths are not exactly
-            the same in spectrum and in hdr  
-            it is difficult to make it even,
-            so the last ones are filled
-        */
-        if(reflectances_position < CHANNELS){
-            for(int i = reflectances_position; i < CHANNELS; i++){
-                reflectances[i] = reflectances[reflectances_position - 1]; 
-            }                                                          
-        }                                    
-    }
-
-    else if(order == ASC){
-        wavelengths_position = 0;
-        while (getline(file, line)){ 
-            istringstream line_stream(line);
-
-            getline(line_stream, segment, ' ');
-            if(segment.length() == 0)
-                getline(line_stream, segment, ' ');
-
-            if(stof(segment) <= last_value){
-                previous_diff = stof(segment) - last_value;
-                getline(line_stream, segment, ' ');
-                previous_reflectance = stof(segment);
-                break;
-            }
-        }
-
-        while(getline(file, line)){
-            istringstream line_stream(line);
-
-            getline(line_stream, segment, ' ');
-            if(segment.length() == 0)
-                getline(line_stream, segment, ' ');
-
-            wavelength_read = stof(segment);
-
-            diff = abs(wavelengths[wavelengths_position] - wavelength_read);
-            cout << "diff: " << diff << " in position " << wavelengths_position << endl;
-            if (diff < previous_diff){
-                previous_diff = diff;
-                getline(line_stream, segment, ' ');
-                reflectance_read = stof(segment);
-                reflectance = reflectance_read;
-            }
-            else {
-                reflectances[reflectances_position] = reflectance;
-                if(wavelengths_position < CHANNELS){
-                    wavelengths_position++;
-                    diff = FLOAT_MAX;
-                }
-                else 
-                    break;
-            }
-        }
-    }
-    
     file.close();
     return EXIT_SUCCESS;
-
 }
 
 int main(){
