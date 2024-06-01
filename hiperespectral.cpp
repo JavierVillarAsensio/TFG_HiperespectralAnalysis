@@ -34,6 +34,8 @@
 #define SPECTRUM_LAST_VALUE_FIELD "Last X Value" 
 #define FROM_LAST_VALUE_TO_VALUES 3
 
+#define REFLECTANCES_FOLDER "reflectances/"
+
 #define ASC 2   // 0 and 1 are EXIT_SUCCESS and EXIT_FAILURE
 #define DESC 3
 
@@ -113,6 +115,8 @@ int read_hdr(float *wavelengths){
 void save_reflectances(ifstream& file, float previous_reflectance, float previous_diff, float *wavelengths, float *reflectances, int order){
     string line, segment;
     int reflectances_position = 0, wavelengths_position = CHANNELS - 1;
+    if (order == ASC)
+        wavelengths_position = 0;
     float final_wavelength = wavelengths[CHANNELS - 1], previous_wavelength, wavelength_read, diff, reflectance_read;
 
     while (getline(file, line)){ 
@@ -149,8 +153,12 @@ void save_reflectances(ifstream& file, float previous_reflectance, float previou
         else {
             reflectances[reflectances_position] = previous_reflectance;
             reflectances_position++;
-            if(wavelengths_position >= 0){
+            if(wavelengths_position >= 0 && order == DESC){
                 wavelengths_position--;
+                previous_diff = FLOAT_MAX;
+            }
+            else if(wavelengths_position <= CHANNELS  && order == ASC){
+                wavelengths_position++;
                 previous_diff = FLOAT_MAX;
             }
             else 
@@ -162,13 +170,13 @@ void save_reflectances(ifstream& file, float previous_reflectance, float previou
     
     if (order == DESC) {
         int swap_index = CHANNELS - 1;
-        float *swap = (float*)malloc(CHANNELS * sizeof(float));
-        memcpy(swap, reflectances, CHANNELS * sizeof(float));
+        float *aux = (float*)malloc(CHANNELS * sizeof(float));
+        memcpy(aux, reflectances, CHANNELS * sizeof(float));
         for(int i = 0; i < CHANNELS; i++){
-            reflectances[swap_index] = swap[i];
+            reflectances[swap_index] = aux[i];
             swap_index--;
         }
-        free(swap);
+        free(aux);
     }                                
 }
 
@@ -209,8 +217,6 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
     else
         order = ASC;
 
-    cout << "order: " << order << endl;
-
     save_reflectances(file, previous_reflectance, previous_diff, wavelengths, reflectances, order);
 
     file.close();
@@ -223,12 +229,10 @@ int main(){
     float *channels = (float*)malloc(CHANNELS * sizeof(float));
     float *image = (float*)malloc(n_pixels * sizeof(float));
 
-    
-
     if (read_hdr(channels) == EXIT_FAILURE)
         return EXIT_FAILURE;  
 
-    int spectrum_wavelengths_order = read_spectrum(channels[0], channels[CHANNELS - 1], reflectances, channels, WATER_PATH);
+    int spectrum_wavelengths_order = read_spectrum(channels[0], channels[CHANNELS - 1], reflectances, channels, TREE_PATH);
     if (spectrum_wavelengths_order == EXIT_FAILURE)
         return EXIT_FAILURE;  
     
@@ -236,15 +240,17 @@ int main(){
     for(int i = 0; i < CHANNELS; i++){
         cout << i << ": " << reflectances[i] << endl;
     }
-
     /*
     if (read_img(image) == EXIT_FAILURE)
         return EXIT_FAILURE;
     */
-
+    
+    cout << "Freeing reflectances..." << endl;
     free(reflectances);
+    cout << "Freeing imgage..." << endl;
     free(image);
+    cout << "Freeing channels..." << endl;
     free(channels);
-
+    cout << "Freed" << endl;
     return(EXIT_SUCCESS);
 }
