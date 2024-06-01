@@ -6,6 +6,8 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <cstring>
 #include <map>
 #include <string>
@@ -36,6 +38,8 @@
 #define DESC 3
 
 #define FLOAT_MAX 3.4028234663852886e+38F
+
+#define WAVELENGTH_UNIT_REFACTOR 1000
 
 using namespace std;
 
@@ -99,6 +103,9 @@ int read_hdr(float *wavelengths){
             }
         }
 
+    for(int i = 0; i < CHANNELS; i++){
+        wavelengths[i] /= WAVELENGTH_UNIT_REFACTOR;
+    }
     file.close();
     return EXIT_SUCCESS;
 }
@@ -106,6 +113,7 @@ int read_hdr(float *wavelengths){
 int read_spectrum(float initial_wavelength, float final_wavelength, float *reflectances, float *wavelengths, string path){
     int number_of_reflectances, order;
     float reflectance_read, previous_reflectance, reflectance, previous_diff, diff, wavelength_read;
+    streampos begin_pointer;
 
     ifstream file(path);
     if(!file.is_open()){
@@ -116,9 +124,9 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
     string line, segment;
     int iter = 0;
     float first_value, last_value;
+
     while (getline(file, line)) {
         istringstream line_stream(line);
-        
         getline(line_stream, segment, ':');
         if (segment == SPECTRUM_FIRST_VALUE_FIELD){
             getline(line_stream, segment, ':');
@@ -146,29 +154,42 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
             istringstream line_stream(line);
 
             getline(line_stream, segment, ' ');
-            if(stof(segment) <= last_value){
+            if(segment.length() == 0)
+                getline(line_stream, segment, ' ');
+
+            if(stof(segment) <= final_wavelength){
                 previous_diff = stof(segment) - last_value;
                 getline(line_stream, segment, ' ');
                 previous_reflectance = stof(segment);
                 break;
             }
         }
-
+        
+        cout << "prev refl: " << previous_reflectance << endl << endl;
+        int iter = 0;
         while(getline(file, line)){
             istringstream line_stream(line);
+            cout << "line: " << line << endl;
 
             getline(line_stream, segment, ' ');
+            if(segment.length() == 0)
+                getline(line_stream, segment, ' ');
             wavelength_read = stof(segment);
 
             diff = abs(wavelengths[wavelengths_position] - wavelength_read);
+            cout << "wave read: " << wavelength_read << endl << "wave prev: " << wavelengths[wavelengths_position] << endl << "diff: " << diff << endl;
+            cout << "prev diff: " << previous_diff << endl;
+            cout << "reflectance: " << reflectance << endl;
             if (diff < previous_diff){
                 previous_diff = diff;
                 getline(line_stream, segment, ' ');
                 reflectance_read = stof(segment);
                 reflectance = reflectance_read;
+                cout << "nueva reflectance: " << reflectance << endl;
             }
             else {
                 reflectances[reflectances_position] = reflectance;
+                cout << "se guarda: " << reflectances[reflectances_position] << endl;
                 if(wavelengths_position > 0){
                     wavelengths_position--;
                     diff = FLOAT_MAX;
@@ -176,6 +197,12 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
                 else 
                     break;
             }
+
+            if(iter == 5){
+                break;
+            }
+            iter++;
+            cout << endl;
         }
     }
     else if(order == ASC){
@@ -184,6 +211,9 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
             istringstream line_stream(line);
 
             getline(line_stream, segment, ' ');
+            if(segment.length() == 0)
+                getline(line_stream, segment, ' ');
+
             if(stof(segment) <= last_value){
                 previous_diff = stof(segment) - last_value;
                 getline(line_stream, segment, ' ');
@@ -196,6 +226,9 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
             istringstream line_stream(line);
 
             getline(line_stream, segment, ' ');
+            if(segment.length() == 0)
+                getline(line_stream, segment, ' ');
+
             wavelength_read = stof(segment);
 
             diff = abs(wavelengths[wavelengths_position] - wavelength_read);
@@ -218,7 +251,6 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
         }
     }
     
-
     file.close();
     return EXIT_SUCCESS;
 
@@ -235,9 +267,13 @@ int main(){
     if (read_hdr(channels) == EXIT_FAILURE)
         return EXIT_FAILURE;  
 
-    int spectrum_wavelengths_order = read_spectrum(400, 2457.23, reflectances, channels, WATER_PATH);
+    int spectrum_wavelengths_order = read_spectrum(channels[0], channels[CHANNELS - 1], reflectances, channels, WATER_PATH);
     if (spectrum_wavelengths_order == EXIT_FAILURE)
         return EXIT_FAILURE;  
+    /*
+    for(int i = 0; i < CHANNELS; i++){
+        cout << i << ": " << reflectances[i] << endl;
+    }
 
     /*
     if (read_img(image) == EXIT_FAILURE)
