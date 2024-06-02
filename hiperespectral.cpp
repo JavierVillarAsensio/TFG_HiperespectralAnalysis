@@ -1,8 +1,6 @@
 /*
     The format is bil so it is read the firstpixel of every channel
 */
-
-
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
@@ -50,7 +48,6 @@ using namespace std;
 int width, height, n_channels = CHANNELS;
 
 int read_img(float *img) {
-    cout << "read img" << endl;
     int n_pixels = width * height * n_channels;
 
     ifstream file(IMG_PATH, ios::binary);
@@ -62,20 +59,17 @@ int read_img(float *img) {
     int index = 0;
     char buffer[DATA_SIZE];
     short int value;
-    cout << "se empieza a leer" << endl;
-    while(index < 1000){
-        file.get(buffer, DATA_SIZE);
+    while(index < n_pixels){
+        file.read(buffer, DATA_SIZE);
 
         memcpy(&value, buffer, DATA_SIZE);
         img[index] = static_cast<float>(value)/PERCENTAGE_REFACTOR;
-        cout << "read: " << img[index] << endl;
+
         index++;
     }
     file.close();
 
-    cout << "n_pixels: " << n_pixels << " index: " << index << endl;
-
-    if (index != n_pixels-1){
+    if (index != n_pixels){
         cout << "Error reading file, the number of pixels read was not the expected. Aborting." << endl;
         return EXIT_FAILURE;
     }
@@ -171,6 +165,9 @@ void save_reflectances(ifstream& file, float previous_reflectance, float previou
     }
 
     while(getline(file, line)){
+        if(reflectances_position == n_channels)
+            break;
+        
         istringstream line_stream(line);
 
         getline(line_stream, segment, ' ');
@@ -188,20 +185,17 @@ void save_reflectances(ifstream& file, float previous_reflectance, float previou
         else {
             reflectances[reflectances_position] = previous_reflectance;
             reflectances_position++;
+            
             if(wavelengths_position >= 0 && order == DESC){
                 wavelengths_position--;
                 previous_diff = FLOAT_MAX;
             }
-            else if(wavelengths_position <= n_channels  && order == ASC){
+            else if(wavelengths_position <= n_channels && order == ASC){
                 wavelengths_position++;
                 previous_diff = FLOAT_MAX;
-            }
-            else 
-                break;                                                                  
+            }                                                             
         }
-        reflectances[reflectances_position] = previous_reflectance;
-    } 
-
+    }
     
     if (order == DESC) {
         int swap_index = n_channels - 1;
@@ -258,14 +252,12 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
 }
 
 int main(){
-    cout << "start" << endl;
+    cout << "Starting program..." << endl;
     
-
     float *reflectances = (float*)malloc(n_channels * sizeof(float));
     float *channels = (float*)malloc(n_channels * sizeof(float));
-    
 
-    cout << "Memory allocated." << endl;
+    cout << "Memory allocated" << endl;
 
     if (read_hdr(channels) == EXIT_FAILURE)
         return EXIT_FAILURE;
@@ -273,12 +265,12 @@ int main(){
     int n_pixels = width * height * n_channels; 
     float *image = (float*)malloc(n_pixels * sizeof(float));
 
-    cout << ".hdr read." << endl;
+    cout << "File .hdr read" << endl;
 
     if (read_spectrum(channels[0], channels[n_channels - 1], reflectances, channels, TREE_PATH) == EXIT_FAILURE)
         return EXIT_FAILURE;  
     
-    cout << "Spectrum read." << endl;
+    cout << "Spectrum read" << endl;
 
     if (read_img(image) == EXIT_FAILURE)
         return EXIT_FAILURE;
