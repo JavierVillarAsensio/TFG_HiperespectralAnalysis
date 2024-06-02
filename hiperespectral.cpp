@@ -1,5 +1,9 @@
 /*
-    The format is bil so it is read the firstpixel of every channel
+    The format is bil so it is read the line of every channel
+
+    so the pointer goes:
+    100 first pixels of band #1, 100 first pixels of band #2...
+    when bands are finished reads next line of every channel
 */
 #include <iostream>
 #include <fstream>
@@ -111,7 +115,6 @@ int read_hdr(float *wavelengths){
                         if(value.find(END_FIELD) != string::npos){
                             waves_read = true;
                         }
-                        
                     }
                 }
             }
@@ -251,6 +254,19 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
     return EXIT_SUCCESS;
 }
 
+void calculate_distance_of_every_pixel_to_spectrum(float *image) {
+    int index = 0;
+
+    for(int height_offset = 0; height_offset < height; height_offset++){
+        for(int band_offset = 0; band_offset < n_channels; band_offset++){
+            for(int width_offset = 0; width_offset < width; width_offset++){
+                index++;
+                cout << index << ": " << image[(height_offset * height) + (band_offset * n_channels) + (width_offset * width)] << endl;
+            }
+        }
+    }
+}
+
 int main(){
     cout << "Starting program..." << endl;
     
@@ -261,28 +277,29 @@ int main(){
 
     if (read_hdr(channels) == EXIT_FAILURE)
         return EXIT_FAILURE;
+    cout << "File .hdr read" << endl;
 
     int n_pixels = width * height * n_channels; 
     float *image = (float*)malloc(n_pixels * sizeof(float));
 
-    cout << "File .hdr read" << endl;
-
     if (read_spectrum(channels[0], channels[n_channels - 1], reflectances, channels, TREE_PATH) == EXIT_FAILURE)
         return EXIT_FAILURE;  
-    
     cout << "Spectrum read" << endl;
+    cout << "Freeing channels..." << endl;
+    free(channels);
 
     if (read_img(image) == EXIT_FAILURE)
         return EXIT_FAILURE;
-
     cout << "Image read." << endl;
+
+    cout << "Calculating distances..." << endl;
+    calculate_distance_of_every_pixel_to_spectrum(image);
 
     cout << "Freeing reflectances..." << endl;
     free(reflectances);
-    cout << "Freeing imgage..." << endl;
+    cout << "Freeing image..." << endl;
     free(image);
-    cout << "Freeing channels..." << endl;
-    free(channels);
+    
     cout << "Freed" << endl;
     return(EXIT_SUCCESS);
 }
