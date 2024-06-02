@@ -12,17 +12,12 @@
 #include <map>
 #include <string>
 #include <sstream>
-#include <vector>
 
-#define WIDTH 100
-#define HEIGHT 100
+#define DATA_SIZE sizeof(short)
 #define CHANNELS 198
-#define DATA_SIZE 2
 
 #define IMG_PATH "jasperRidge2_R198/jasperRidge2_R198.img"
 #define HDR_PATH "jasperRidge2_R198/jasperRidge2_R198.hdr"
-
-#define SPECTRUMS_FILE "spectrums.txt"
 
 #define ROAD_PATH "spectrums/manmade.concrete.pavingconcrete.solid.all.0092uuu_cnc.jhu.becknic.spectrum.txt"
 #define SOIL1_PATH "spectrums/soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic.spectrum.txt"
@@ -31,6 +26,9 @@
 #define WATER_PATH "spectrums/water.tapwater.none.liquid.all.tapwater.jhu.becknic.spectrum.txt"
 
 #define WAVELENGTH_FIELD "wavelength"
+#define ROWS_FIELD "lines"
+#define COLS_FIELD "samples"
+#define CHANNELS_FIELD "bands"
 #define END_FIELD "}"
 
 #define SPECTRUM_FIRST_VALUE_FIELD "First X Value"
@@ -44,13 +42,17 @@
 
 #define FLOAT_MAX 3.4028234663852886e+38F
 
-#define WAVELENGTH_UNIT_REFACTOR 1000
+#define WAVELENGTH_UNIT_REFACTOR 1000   //from nanometers to micrometers
+#define PERCENTAGE_REFACTOR 100
 
 using namespace std;
 
-static int n_pixels = WIDTH * HEIGHT * CHANNELS;
+int width, height, n_channels = CHANNELS;
 
 int read_img(float *img) {
+    cout << "read img" << endl;
+    int n_pixels = width * height * n_channels;
+
     ifstream file(IMG_PATH, ios::binary);
     if(!file.is_open()){
         cout << "Error opening the file, it could not be opened. Aborting." << endl;
@@ -60,14 +62,18 @@ int read_img(float *img) {
     int index = 0;
     char buffer[DATA_SIZE];
     short int value;
-    while(index < n_pixels){
-        file.read(buffer, DATA_SIZE);
+    cout << "se empieza a leer" << endl;
+    while(index < 1000){
+        file.get(buffer, DATA_SIZE);
 
         memcpy(&value, buffer, DATA_SIZE);
-        img[index] = static_cast<float>(value);
+        img[index] = static_cast<float>(value)/PERCENTAGE_REFACTOR;
+        cout << "read: " << img[index] << endl;
         index++;
     }
     file.close();
+
+    cout << "n_pixels: " << n_pixels << " index: " << index << endl;
 
     if (index != n_pixels-1){
         cout << "Error reading file, the number of pixels read was not the expected. Aborting." << endl;
@@ -78,49 +84,75 @@ int read_img(float *img) {
 }
 
 int read_hdr(float *wavelengths){
+    float number;
+    string value;
+
     ifstream file(HDR_PATH);
     if(!file.is_open()){
         cout << "Error opening the file, it could not be opened. Aborting." << endl;
         return(EXIT_FAILURE);
     }
 
-    map<string, string> headerData;
     string line;
     int index = 0;
+    bool waves_read = false;
     while (getline(file, line)) {
         istringstream lineStream(line);
         string key;
         if (getline(lineStream, key, '=')) {
-
             key.erase(key.find_last_not_of(" \n\r\t")+1); //erase spaces or any dirty char
             if(key == WAVELENGTH_FIELD){
+                
                 string value;
-                while (1) {
+                while (!waves_read) {
                     getline(file, line, ',');
                     stringstream numbers(line);
-                    numbers >> wavelengths[index];
-                    index++;
-                    if(line.find(END_FIELD) != string::npos)
-                        break;
-                }
-                
+                    while(getline(numbers, value) && !waves_read){
+                        if(value.size() > 0){
+                            number = stof(value);
+                            wavelengths[index] = number;
+                            index++;
+                            
+                        }
+                        if(value.find(END_FIELD) != string::npos){
+                            waves_read = true;
+                        }
+                        
+                    }
                 }
             }
+            else if(key == CHANNELS_FIELD){
+                string value;
+                getline(lineStream, value, '=');
+                n_channels = stoi(value);
+            }
+            else if(key == ROWS_FIELD){
+                string value;
+                getline(lineStream, value, '=');
+                height = stoi(value);
+            }
+            else if(key == COLS_FIELD){
+                string value;
+                getline(lineStream, value, '=');
+                width = stoi(value);
+            }
         }
-
-    for(int i = 0; i < CHANNELS; i++){
-        wavelengths[i] /= WAVELENGTH_UNIT_REFACTOR;
     }
+
+    for(int i = 0; i < n_channels; i++){
+        wavelengths[i] = wavelengths[i] / WAVELENGTH_UNIT_REFACTOR;
+    }
+
     file.close();
     return EXIT_SUCCESS;
 }
 
 void save_reflectances(ifstream& file, float previous_reflectance, float previous_diff, float *wavelengths, float *reflectances, int order){
     string line, segment;
-    int reflectances_position = 0, wavelengths_position = CHANNELS - 1;
+    int reflectances_position = 0, wavelengths_position = n_channels - 1;
     if (order == ASC)
         wavelengths_position = 0;
-    float final_wavelength = wavelengths[CHANNELS - 1], previous_wavelength, wavelength_read, diff, reflectance_read;
+    float final_wavelength = wavelengths[n_channels - 1], previous_wavelength, wavelength_read, diff, reflectance_read;
 
     while (getline(file, line)){ 
         istringstream line_stream(line);
@@ -160,7 +192,7 @@ void save_reflectances(ifstream& file, float previous_reflectance, float previou
                 wavelengths_position--;
                 previous_diff = FLOAT_MAX;
             }
-            else if(wavelengths_position <= CHANNELS  && order == ASC){
+            else if(wavelengths_position <= n_channels  && order == ASC){
                 wavelengths_position++;
                 previous_diff = FLOAT_MAX;
             }
@@ -172,10 +204,10 @@ void save_reflectances(ifstream& file, float previous_reflectance, float previou
 
     
     if (order == DESC) {
-        int swap_index = CHANNELS - 1;
-        float *aux = (float*)malloc(CHANNELS * sizeof(float));
-        memcpy(aux, reflectances, CHANNELS * sizeof(float));
-        for(int i = 0; i < CHANNELS; i++){
+        int swap_index = n_channels - 1;
+        float *aux = (float*)malloc(n_channels * sizeof(float));
+        memcpy(aux, reflectances, n_channels * sizeof(float));
+        for(int i = 0; i < n_channels; i++){
             reflectances[swap_index] = aux[i];
             swap_index--;
         }
@@ -225,36 +257,33 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
     return EXIT_SUCCESS;
 }
 
-void collect_spectrums_names(std::vector<string> *paths){
-    ifstream file(SPECTRUMS_FILE);
-    string name;
-    int pos = 0;
-
-    while(getline(file, name)){
-        paths->push_back(name);
-        pos++;
-    }
-}
-
 int main(){
+    cout << "start" << endl;
+    
 
-    float *reflectances = (float*)malloc(CHANNELS * sizeof(float));
-    float *channels = (float*)malloc(CHANNELS * sizeof(float));
-    float *image = (float*)malloc(n_pixels * sizeof(float));
-    std::vector<string> paths;
+    float *reflectances = (float*)malloc(n_channels * sizeof(float));
+    float *channels = (float*)malloc(n_channels * sizeof(float));
+    
 
-    collect_spectrums_names(&paths);
+    cout << "Memory allocated." << endl;
 
     if (read_hdr(channels) == EXIT_FAILURE)
-        return EXIT_FAILURE;  
+        return EXIT_FAILURE;
 
-    if (read_spectrum(channels[0], channels[CHANNELS - 1], reflectances, channels, TREE_PATH) == EXIT_FAILURE)
+    int n_pixels = width * height * n_channels; 
+    float *image = (float*)malloc(n_pixels * sizeof(float));
+
+    cout << ".hdr read." << endl;
+
+    if (read_spectrum(channels[0], channels[n_channels - 1], reflectances, channels, TREE_PATH) == EXIT_FAILURE)
         return EXIT_FAILURE;  
     
-    /*
+    cout << "Spectrum read." << endl;
+
     if (read_img(image) == EXIT_FAILURE)
         return EXIT_FAILURE;
-    */
+
+    cout << "Image read." << endl;
 
     cout << "Freeing reflectances..." << endl;
     free(reflectances);

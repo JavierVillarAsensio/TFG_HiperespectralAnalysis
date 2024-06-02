@@ -1,5 +1,3 @@
-specs = spectrums.txt
-reflectances_folder = reflectances
 specs_folder = spectrums/
 
 code = hiperespectral.cpp
@@ -9,11 +7,7 @@ run: prepare
 	./$(exe)
 
 prepare:	
-	ls $(specs_folder) >> $(specs)
-	mkdir -p $(reflectances_folder)
-	g++ $(code) -o $(exe)
+	g++ $(code) -g -O0 -o $(exe)
 
 clean:
 	rm -f $(exe)
-	rm -f $(specs)
-	rm -r -f $(reflectances_folder)
