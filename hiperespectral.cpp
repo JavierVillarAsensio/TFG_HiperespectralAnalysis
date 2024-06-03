@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <cstring>
-#include <map>
 #include <string>
 #include <sstream>
+#include <math.h>
 
 #define DATA_SIZE sizeof(short)
 #define CHANNELS 198
@@ -63,11 +63,16 @@ int read_img(float *img) {
     int index = 0;
     char buffer[DATA_SIZE];
     short int value;
+    float refl;
     while(index < n_pixels){
         file.read(buffer, DATA_SIZE);
 
         memcpy(&value, buffer, DATA_SIZE);
-        img[index] = static_cast<float>(value)/PERCENTAGE_REFACTOR;
+        refl = static_cast<float>(value)/PERCENTAGE_REFACTOR;
+        if(refl < 0)
+            refl = 0;
+
+        img[index] = refl;
 
         index++;
     }
@@ -254,15 +259,16 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
     return EXIT_SUCCESS;
 }
 
-void calculate_distance_of_every_pixel_to_spectrum(float *image) {
-    int index = 0;
+void calculate_distance_of_every_pixel_to_spectrum(float *image, float *reflectances, float *distances) {
+    float sum;
 
     for(int height_offset = 0; height_offset < height; height_offset++){
-        for(int band_offset = 0; band_offset < n_channels; band_offset++){
-            for(int width_offset = 0; width_offset < width; width_offset++){
-                index++;
-                cout << index << ": " << image[(height_offset * height) + (band_offset * n_channels) + (width_offset * width)] << endl;
+        for(int width_offset = 0; width_offset < width; width_offset++){
+            sum = 0;
+            for(int band_offset = 0; band_offset < n_channels; band_offset++){
+                sum += pow((image[(height_offset * (width * n_channels)) + (band_offset * width) + width_offset] - reflectances[band_offset]), 2.0);
             }
+            distances[(height_offset * width) + width] = sqrt(sum);
         }
     }
 }
@@ -272,6 +278,7 @@ int main(){
     
     float *reflectances = (float*)malloc(n_channels * sizeof(float));
     float *channels = (float*)malloc(n_channels * sizeof(float));
+    
 
     cout << "Memory allocated" << endl;
 
@@ -281,6 +288,7 @@ int main(){
 
     int n_pixels = width * height * n_channels; 
     float *image = (float*)malloc(n_pixels * sizeof(float));
+    float *distances = (float*)malloc(width * height * sizeof(float));
 
     if (read_spectrum(channels[0], channels[n_channels - 1], reflectances, channels, TREE_PATH) == EXIT_FAILURE)
         return EXIT_FAILURE;  
@@ -293,7 +301,13 @@ int main(){
     cout << "Image read." << endl;
 
     cout << "Calculating distances..." << endl;
-    calculate_distance_of_every_pixel_to_spectrum(image);
+    calculate_distance_of_every_pixel_to_spectrum(image, reflectances, distances);
+
+    for(int i = 0; i < (width * height); i++){
+        cout << distances[i] << " ";
+        if((i + 1) % 100 == 0)
+            cout << endl;
+    }
 
     cout << "Freeing reflectances..." << endl;
     free(reflectances);
