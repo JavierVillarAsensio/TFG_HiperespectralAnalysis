@@ -14,6 +14,7 @@
 #include <string>
 #include <sstream>
 #include <math.h>
+#include <opencv2/opencv.hpp>
 
 #define DATA_SIZE sizeof(short)
 #define CHANNELS 198
@@ -268,9 +269,28 @@ void calculate_distance_of_every_pixel_to_spectrum(float *image, float *reflecta
             for(int band_offset = 0; band_offset < n_channels; band_offset++){
                 sum += pow((image[(height_offset * (width * n_channels)) + (band_offset * width) + width_offset] - reflectances[band_offset]), 2.0);
             }
-            distances[(height_offset * width) + width] = sqrt(sum);
+            distances[(height_offset * width) + width_offset] = sqrt(sum);
         }
     }
+}
+
+void print_img(float *distances) {
+    float value;
+    uint8_t img[height * width];
+    
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            value = distances[(i * height) + j];
+            if (value > 255)
+                value = 255;
+            img[(i * height) + j] = (int)value;
+        }
+    }
+
+    cv::Mat gray(height, width, CV_8UC1, img);
+    cv::namedWindow("test", cv::WINDOW_AUTOSIZE);
+    cv::imshow("test", gray);
+    cv::waitKey(0);
 }
 
 int main(){
@@ -303,11 +323,7 @@ int main(){
     cout << "Calculating distances..." << endl;
     calculate_distance_of_every_pixel_to_spectrum(image, reflectances, distances);
 
-    for(int i = 0; i < (width * height); i++){
-        cout << distances[i] << " ";
-        if((i + 1) % 100 == 0)
-            cout << endl;
-    }
+    //print_img(distances);
 
     cout << "Freeing reflectances..." << endl;
     free(reflectances);
