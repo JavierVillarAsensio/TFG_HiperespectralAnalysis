@@ -28,6 +28,8 @@
 #define TREE_PATH "spectrums/vegetation.tree.eucalyptus.maculata.vswir.jpl087.jpl.asd.spectrum.txt"
 #define WATER_PATH "spectrums/water.tapwater.none.liquid.all.tapwater.jhu.becknic.spectrum.txt"
 
+#define OUTPUT_DISTANCES_FILE "distances.bin"
+
 #define WAVELENGTH_FIELD "wavelength"
 #define ROWS_FIELD "lines"
 #define COLS_FIELD "samples"
@@ -124,6 +126,7 @@ int read_hdr(float *wavelengths){
                     }
                 }
             }
+            //set size of img to read
             else if(key == CHANNELS_FIELD){
                 string value;
                 getline(lineStream, value, '=');
@@ -293,16 +296,29 @@ void print_img(float *distances) {
     cv::waitKey(0);
 }
 
+int write_distances_file(float *distances){
+    size_t img_size = (height * width)*sizeof(float);
+
+    ofstream out(OUTPUT_DISTANCES_FILE, ios::binary);
+    if(!out){
+        cout << "Error writing distances file. Aborting..." << endl;
+        return EXIT_FAILURE;
+    }
+
+    out.write(reinterpret_cast<char*>(distances), img_size);
+    out.close();
+
+    return EXIT_SUCCESS;
+}
+
 int main(){
     cout << "Starting program..." << endl;
     
     float *reflectances = (float*)malloc(n_channels * sizeof(float));
     float *channels = (float*)malloc(n_channels * sizeof(float));
-    
-
     cout << "Memory allocated" << endl;
 
-    if (read_hdr(channels) == EXIT_FAILURE)
+    if (read_hdr(channels))
         return EXIT_FAILURE;
     cout << "File .hdr read" << endl;
 
@@ -310,20 +326,25 @@ int main(){
     float *image = (float*)malloc(n_pixels * sizeof(float));
     float *distances = (float*)malloc(width * height * sizeof(float));
 
-    if (read_spectrum(channels[0], channels[n_channels - 1], reflectances, channels, TREE_PATH) == EXIT_FAILURE)
-        return EXIT_FAILURE;  
+    if (read_spectrum(channels[0], channels[n_channels - 1], reflectances, channels, TREE_PATH))
+        return EXIT_FAILURE; 
+
     cout << "Spectrum read" << endl;
     cout << "Freeing channels..." << endl;
     free(channels);
 
-    if (read_img(image) == EXIT_FAILURE)
+    if (read_img(image))
         return EXIT_FAILURE;
-    cout << "Image read." << endl;
+    cout << "Image read" << endl;
 
     cout << "Calculating distances..." << endl;
     calculate_distance_of_every_pixel_to_spectrum(image, reflectances, distances);
 
     //print_img(distances);
+
+    cout << "Writing distances file..." << endl;
+    if (write_distances_file(distances))
+        return EXIT_FAILURE;
 
     cout << "Freeing reflectances..." << endl;
     free(reflectances);

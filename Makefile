@@ -1,8 +1,8 @@
 specs_folder = spectrums/
-
 code = hiperespectral.cpp
 exe = hiper
 flags = `pkg-config opencv4 --cflags --libs`
+output = distances.bin
 
 run: prepare
 	./$(exe)
@@ -12,3 +12,4 @@ prepare:
 
 clean:
 	rm -f $(exe)
+	rm -f $(output)
