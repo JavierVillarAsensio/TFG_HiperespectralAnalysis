@@ -1,7 +1,7 @@
 code = hiperespectral.cpp
 exe = hiper
 flags = `pkg-config opencv4 --cflags --libs`
-output = distances.bin
+output = *.bin
 output_folder = output/
 file_path = spectrums/vegetation.tree.eucalyptus.maculata.vswir.jpl087.jpl.asd.spectrum.txt
 log = log

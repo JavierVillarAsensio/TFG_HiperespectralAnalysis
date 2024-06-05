@@ -14,6 +14,7 @@
 #include <string>
 #include <sstream>
 #include <math.h>
+#include <algorithm>
 //#include <opencv2/opencv.hpp>
 
 #define DATA_SIZE sizeof(short)
@@ -22,7 +23,7 @@
 #define IMG_PATH "jasperRidge2_R198/jasperRidge2_R198.img"
 #define HDR_PATH "jasperRidge2_R198/jasperRidge2_R198.hdr"
 
-#define OUTPUT_DISTANCES_FILE "output/distances.bin"
+#define OUTPUT_DISTANCES_FOLDER "output/"
 
 #define WAVELENGTH_FIELD "wavelength"
 #define ROWS_FIELD "lines"
@@ -290,10 +291,10 @@ void print_img(float *distances) {
 }
 */
 
-int write_distances_file(float *distances){
+int write_distances_file(float *distances, const string output_file){
     size_t img_size = (height * width)*sizeof(float);
 
-    ofstream out(OUTPUT_DISTANCES_FILE, ios::binary);
+    ofstream out(output_file, ios::binary);
     if(!out){
         cout << "Error writing distances file. Aborting..." << endl;
         return EXIT_FAILURE;
@@ -306,7 +307,18 @@ int write_distances_file(float *distances){
 }
 
 int main(int argc, const char *argv[]){
-    string file_path = argv[1];
+    string file_path = argv[1], attrib, out_name;
+    stringstream ss(file_path);
+    int two_attribs_index = 0;
+    while(getline(ss, attrib, '.')){
+        out_name.append(attrib);
+        two_attribs_index++;
+        if(two_attribs_index == 2)
+            break;
+    }
+
+    replace(out_name.begin(), out_name.end(), '/', '.');
+    const string output_file = OUTPUT_DISTANCES_FOLDER + out_name + ".bin";
 
     cout << "Starting program..." << endl;
     
@@ -339,7 +351,7 @@ int main(int argc, const char *argv[]){
     //print_img(distances);
 
     cout << "Writing distances file..." << endl;
-    if (write_distances_file(distances))
+    if (write_distances_file(distances, output_file))
         return EXIT_FAILURE;
 
     cout << "Freeing reflectances..." << endl;
