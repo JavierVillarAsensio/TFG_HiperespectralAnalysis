@@ -1,14 +1,12 @@
-    FROM ubuntu
+FROM ubuntu
 
-    RUN apt-get update && \
-        apg-get install -y
+RUN apt-get update && apg-get install -y \
+build-essential 
 
-    FROM gcc:latest
+FROM gcc:latest
 
-    COPY hello.c /docker_prueba/hello.c
+COPY . .
 
-    WORKDIR /docker_prueba/
+RUN g++ hiperespectral.cpp -o hiper
 
-    RUN gcc -o hello hello.c
-
-    CMD [“./hello]
+CMD ["./hiper", "spectrums/vegetation.tree.eucalyptus.maculata.vswir.jpl087.jpl.asd.spectrum.txt", "> output/log"]

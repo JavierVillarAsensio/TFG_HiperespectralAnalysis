@@ -14,7 +14,7 @@
 #include <string>
 #include <sstream>
 #include <math.h>
-#include <opencv2/opencv.hpp>
+//#include <opencv2/opencv.hpp>
 
 #define DATA_SIZE sizeof(short)
 #define CHANNELS 198
@@ -22,13 +22,7 @@
 #define IMG_PATH "jasperRidge2_R198/jasperRidge2_R198.img"
 #define HDR_PATH "jasperRidge2_R198/jasperRidge2_R198.hdr"
 
-#define ROAD_PATH "spectrums/manmade.concrete.pavingconcrete.solid.all.0092uuu_cnc.jhu.becknic.spectrum.txt"
-#define SOIL1_PATH "spectrums/soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic.spectrum.txt"
-#define SOIL2_PATH "spectrums/soil.utisol.hapludult.none.all.87p707.jhu.becknic.spectrum.txt"
-#define TREE_PATH "spectrums/vegetation.tree.eucalyptus.maculata.vswir.jpl087.jpl.asd.spectrum.txt"
-#define WATER_PATH "spectrums/water.tapwater.none.liquid.all.tapwater.jhu.becknic.spectrum.txt"
-
-#define OUTPUT_DISTANCES_FILE "distances.bin"
+#define OUTPUT_DISTANCES_FILE "output/distances.bin"
 
 #define WAVELENGTH_FIELD "wavelength"
 #define ROWS_FIELD "lines"
@@ -39,8 +33,6 @@
 #define SPECTRUM_FIRST_VALUE_FIELD "First X Value"
 #define SPECTRUM_LAST_VALUE_FIELD "Last X Value" 
 #define FROM_LAST_VALUE_TO_VALUES 3
-
-#define REFLECTANCES_FOLDER "reflectances/"
 
 #define ASC 2   // 0 and 1 are EXIT_SUCCESS and EXIT_FAILURE
 #define DESC 3
@@ -277,6 +269,7 @@ void calculate_distance_of_every_pixel_to_spectrum(float *image, float *reflecta
     }
 }
 
+/*
 void print_img(float *distances) {
     float value;
     uint8_t img[height * width];
@@ -295,6 +288,7 @@ void print_img(float *distances) {
     cv::imshow("test", gray);
     cv::waitKey(0);
 }
+*/
 
 int write_distances_file(float *distances){
     size_t img_size = (height * width)*sizeof(float);
@@ -311,7 +305,9 @@ int write_distances_file(float *distances){
     return EXIT_SUCCESS;
 }
 
-int main(){
+int main(int argc, const char *argv[]){
+    string file_path = argv[1];
+
     cout << "Starting program..." << endl;
     
     float *reflectances = (float*)malloc(n_channels * sizeof(float));
@@ -326,7 +322,7 @@ int main(){
     float *image = (float*)malloc(n_pixels * sizeof(float));
     float *distances = (float*)malloc(width * height * sizeof(float));
 
-    if (read_spectrum(channels[0], channels[n_channels - 1], reflectances, channels, TREE_PATH))
+    if (read_spectrum(channels[0], channels[n_channels - 1], reflectances, channels, file_path))
         return EXIT_FAILURE; 
 
     cout << "Spectrum read" << endl;
