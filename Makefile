@@ -3,17 +3,16 @@ exe = hiper
 flags = `pkg-config opencv4 --cflags --libs`
 output = *.bin
 output_folder = output/
-file_path = spectrums/vegetation.tree.eucalyptus.maculata.vswir.jpl087.jpl.asd.spectrum.txt
-log = log
+log = *.log
 
-run: prepare
-	./$(exe) $(file_path) > $(output_folder)$(log)
+run: clean prepare
+	./$(exe)
 
 prepare_cv:	
 	g++ $(code) -g -O0 -o $(exe) $(flags)
 
 prepare:	
-	g++ $(code) -g -O0 -o $(exe) 
+	g++ -std=c++17 $(code) -g -O0 -o $(exe) 
 
 clean:
 	rm -f $(exe)

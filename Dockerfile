@@ -9,4 +9,4 @@ COPY . .
 
 RUN g++ hiperespectral.cpp -o hiper
 
-CMD ["./hiper", "spectrums/vegetation.tree.eucalyptus.maculata.vswir.jpl087.jpl.asd.spectrum.txt", "> output/log"]
+CMD ["./hiper"]

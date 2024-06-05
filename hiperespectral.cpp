@@ -15,6 +15,7 @@
 #include <sstream>
 #include <math.h>
 #include <algorithm>
+#include <filesystem>
 //#include <opencv2/opencv.hpp>
 
 #define DATA_SIZE sizeof(short)
@@ -24,6 +25,8 @@
 #define HDR_PATH "jasperRidge2_R198/jasperRidge2_R198.hdr"
 
 #define OUTPUT_DISTANCES_FOLDER "output/"
+#define OUTPUT_DISTANCES_EXTENSION ".bin"
+#define SPECTRUM_FOLDER "spectrums"
 
 #define WAVELENGTH_FIELD "wavelength"
 #define ROWS_FIELD "lines"
@@ -52,7 +55,7 @@ int read_img(float *img) {
 
     ifstream file(IMG_PATH, ios::binary);
     if(!file.is_open()){
-        cout << "Error opening the file, it could not be opened. Aborting." << endl;
+        cout << "Error opening the img file, it could not be opened. Aborting." << endl;
         return(EXIT_FAILURE);
     }
 
@@ -75,7 +78,7 @@ int read_img(float *img) {
     file.close();
 
     if (index != n_pixels){
-        cout << "Error reading file, the number of pixels read was not the expected. Aborting." << endl;
+        cout << "Error reading img file, the number of pixels read was not the expected. Aborting." << endl;
         return EXIT_FAILURE;
     }
     else
@@ -88,7 +91,7 @@ int read_hdr(float *wavelengths){
 
     ifstream file(HDR_PATH);
     if(!file.is_open()){
-        cout << "Error opening the file, it could not be opened. Aborting." << endl;
+        cout << "Error opening the hdr file, it could not be opened. Aborting." << endl;
         return(EXIT_FAILURE);
     }
 
@@ -220,7 +223,7 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
 
     ifstream file(path);
     if(!file.is_open()){
-        cout << "Error opening the file, it could not be opened. Aborting." << endl;
+        cout << "Error opening the spectrum file, it could not be opened. Aborting." << endl;
         return(EXIT_FAILURE);
     }
 
@@ -306,8 +309,20 @@ int write_distances_file(float *distances, const string output_file){
     return EXIT_SUCCESS;
 }
 
-int main(int argc, const char *argv[]){
-    string file_path = argv[1], attrib, out_name;
+string get_spectrum_file_name() {
+    string path;
+    for (const auto& entry : filesystem::directory_iterator(SPECTRUM_FOLDER)) {
+        if (entry.is_regular_file()) {
+            path = entry.path().string();
+            break;
+        }
+    }
+    return path;
+}
+
+string get_output_distances_file_name(string file_path){ 
+    string attrib, out_name;
+
     stringstream ss(file_path);
     int two_attribs_index = 0;
     while(getline(ss, attrib, '.')){
@@ -316,9 +331,28 @@ int main(int argc, const char *argv[]){
         if(two_attribs_index == 2)
             break;
     }
-
     replace(out_name.begin(), out_name.end(), '/', '.');
-    const string output_file = OUTPUT_DISTANCES_FOLDER + out_name + ".bin";
+    out_name = OUTPUT_DISTANCES_FOLDER + out_name + OUTPUT_DISTANCES_EXTENSION;
+
+    return out_name;
+}
+
+string get_output_log_file_name(string file_path) {
+    string log_file_path = file_path;
+    size_t dot = file_path.find_last_of(".");
+
+    log_file_path.replace(dot + 1, string::npos, "log");
+    return log_file_path;
+
+}
+
+int main(){
+    string file_path = get_spectrum_file_name();
+    string output_file = get_output_distances_file_name(file_path);
+
+    ofstream log(get_output_log_file_name(output_file));
+    streambuf *std_out = cout.rdbuf();
+    cout.rdbuf(log.rdbuf());
 
     cout << "Starting program..." << endl;
     
@@ -360,5 +394,8 @@ int main(int argc, const char *argv[]){
     free(image);
     
     cout << "Freed" << endl;
+
+    cout.rdbuf(std_out);
+
     return(EXIT_SUCCESS);
 }
