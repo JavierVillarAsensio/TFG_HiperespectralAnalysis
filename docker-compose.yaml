@@ -1,0 +1,7 @@
+version: '3.8'
+
+services:
+  spectrum:
+    build: .
+    volumes:
+      - ./output:/hiperespectral/output
