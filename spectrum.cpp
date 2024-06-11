@@ -24,8 +24,10 @@
 #define IMG_PATH "jasperRidge2_R198/jasperRidge2_R198.img"
 #define HDR_PATH "jasperRidge2_R198/jasperRidge2_R198.hdr"
 
-#define OUTPUT_DISTANCES_FOLDER "output/"
+#define OUTPUT_DISTANCES_FOLDER "output/distances"
 #define OUTPUT_DISTANCES_EXTENSION ".bin"
+#define OUTPUT_LOG_FOLDER "output/logs"
+#define OUTPUT_LOG_EXTENSION ".log"
 #define SPECTRUM_FOLDER "spectrums"
 
 #define WAVELENGTH_FIELD "wavelength"
@@ -320,37 +322,23 @@ string get_spectrum_file_name() {
     return path;
 }
 
-string get_output_distances_file_name(string file_path){ 
-    string attrib, out_name;
-
-    stringstream ss(file_path);
-    int two_attribs_index = 0;
-    while(getline(ss, attrib, '.')){
-        out_name.append(attrib);
-        two_attribs_index++;
-        if(two_attribs_index == 2)
-            break;
-    }
-    replace(out_name.begin(), out_name.end(), '/', '.');
-    out_name = OUTPUT_DISTANCES_FOLDER + out_name + OUTPUT_DISTANCES_EXTENSION;
+string get_output_file_name(string file_path, string folder, string extension){ 
+    string out_name = file_path;
+    
+    size_t slash = out_name.find_first_of("/");
+    out_name.replace(0, slash, folder);
+    out_name = out_name + extension;
 
     return out_name;
 }
 
-string get_output_log_file_name(string file_path) {
-    string log_file_path = file_path;
-    size_t dot = file_path.find_last_of(".");
-
-    log_file_path.replace(dot + 1, string::npos, "log");
-    return log_file_path;
-
-}
-
 int main(){
     string file_path = get_spectrum_file_name();
-    string output_file = get_output_distances_file_name(file_path);
 
-    ofstream log(get_output_log_file_name(output_file));
+    string distances_file = get_output_file_name(file_path, OUTPUT_DISTANCES_FOLDER, OUTPUT_DISTANCES_EXTENSION);
+    string log_file = get_output_file_name(file_path, OUTPUT_LOG_FOLDER, OUTPUT_LOG_EXTENSION);
+
+    ofstream log(log_file);
     streambuf *std_out = cout.rdbuf();
     cout.rdbuf(log.rdbuf());
 
@@ -358,6 +346,10 @@ int main(){
     
     float *reflectances = (float*)malloc(n_channels * sizeof(float));
     float *channels = (float*)malloc(n_channels * sizeof(float));
+    if (reflectances == NULL || channels == NULL) {
+        cout << "Error allocating memory. Aborting..." << endl;
+        return EXIT_FAILURE;
+    }
     cout << "Memory allocated" << endl;
 
     if (read_hdr(channels))
@@ -385,7 +377,7 @@ int main(){
     //print_img(distances);
 
     cout << "Writing distances file..." << endl;
-    if (write_distances_file(distances, output_file))
+    if (write_distances_file(distances, distances_file))
         return EXIT_FAILURE;
 
     cout << "Freeing reflectances..." << endl;
@@ -394,6 +386,7 @@ int main(){
     free(image);
     
     cout << "Freed" << endl;
+    cout << "Execution finished successfully" << endl;
 
     cout.rdbuf(std_out);
 

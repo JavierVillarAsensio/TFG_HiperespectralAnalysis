@@ -1,3 +1,5 @@
 hiper
-output/*
+output/distances/*
+output/logs/*
 docker_commands
+*.pdf
