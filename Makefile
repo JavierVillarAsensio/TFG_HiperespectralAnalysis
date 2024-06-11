@@ -1,22 +1,36 @@
-code = spectrum.cpp
-exe = spec
+code_spec = spectrum.cpp
+exe_spec = spec
+
 flags = `pkg-config opencv4 --cflags --libs`
-output = *.bin
+
+out = *.bin
 output_folder = output/
 distances_folder = distances/
 logs_folder = logs/
 log = *.log
 
-run: clean prepare
-	./$(exe)
+code_master = master.cpp
+exe_master = master
+
+all: clean prepare_master prepare_spec run_spectrum run_master
+
+run_master: prepare_master
+	./$(exe_master)
+
+prepare_master:
+	g++ $(code_master) -o $(exe_master)
+
+run_spectrum: clean prepare_spec
+	./$(exe_spec)
 
 prepare_cv:	
-	g++ $(code) -o $(exe) $(flags)
+	g++ $(code_spec) -o $(exe_spec) $(flags)
 
-prepare:	
-	g++ $(code) -o $(exe) 
+prepare_spec:	
+	g++ $(code_spec) -o $(exe_spec) 
 
 clean:
-	rm -f $(exe)
-	rm -f $(output_folder)$(distances_folder)$(output)
+	rm -f $(exe_spec)
+	rm -f $(exe_master)
+	rm -f $(output_folder)$(distances_folder)$(out)
 	rm -f $(output_folder)$(logs_folder)$(log)

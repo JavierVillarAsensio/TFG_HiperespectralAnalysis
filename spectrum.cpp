@@ -297,7 +297,7 @@ void print_img(float *distances) {
 */
 
 int write_distances_file(float *distances, const string output_file){
-    size_t img_size = (height * width)*sizeof(float);
+    size_t distances_size = (height * width)*sizeof(float);
 
     ofstream out(output_file, ios::binary);
     if(!out){
@@ -305,7 +305,7 @@ int write_distances_file(float *distances, const string output_file){
         return EXIT_FAILURE;
     }
 
-    out.write(reinterpret_cast<char*>(distances), img_size);
+    out.write(reinterpret_cast<char*>(distances), distances_size);
     out.close();
 
     return EXIT_SUCCESS;
