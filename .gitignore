@@ -1,4 +1,5 @@
 spec
+master
 output/distances/*
 output/logs/*
 docker_commands

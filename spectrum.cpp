@@ -327,7 +327,8 @@ string get_output_file_name(string file_path, string folder, string extension){
     
     size_t slash = out_name.find_first_of("/");
     out_name.replace(0, slash, folder);
-    out_name = out_name + extension;
+    size_t last_dot = out_name.find_last_of(".");
+    out_name.replace(last_dot, out_name.size(), extension);
 
     return out_name;
 }
