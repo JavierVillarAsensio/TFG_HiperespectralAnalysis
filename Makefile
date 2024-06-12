@@ -12,13 +12,16 @@ log = *.log
 code_master = master.cpp
 exe_master = master
 
-all: clean prepare_master prepare_spec run_spectrum run_master
+result = result.jpg
+legend = legend.txt
+
+all: run_spectrum run_master
 
 run_master: prepare_master
 	./$(exe_master)
 
 prepare_master:
-	g++ $(code_master) -o $(exe_master)
+	g++ $(code_master) -o $(exe_master) $(flags)
 
 run_spectrum: clean prepare_spec
 	./$(exe_spec)
@@ -34,3 +37,5 @@ clean:
 	rm -f $(exe_master)
 	rm -f $(output_folder)$(distances_folder)$(out)
 	rm -f $(output_folder)$(logs_folder)$(log)
+	rm -f $(output_folder)$(result)
+	rm -f $(output_folder)$(legend)

@@ -4,7 +4,10 @@
 #include <fstream>
 #include <unistd.h>
 
+#include <opencv2/opencv.hpp>
+
 using namespace std;
+using namespace cv;
 
 #define DISTANCES_FOLDER "output/distances"
 #define HDR_PATH "jasperRidge2_R198/jasperRidge2_R198.hdr"
@@ -14,7 +17,10 @@ using namespace std;
 
 #define FLOAT_MAX 3.4028234663852886e+38F
 
-#define NUMBER_OF_FILES_EXPECTED 1
+#define NUMBER_OF_FILES_EXPECTED 4
+
+#define RESULT_FILE "output/result.jpg"
+#define LEGEND_FILE "output/legend.txt"
 
 int width, height;
 
@@ -113,6 +119,59 @@ void find_nearest_materials(int file_count, size_t distances_size, float *all_di
     }
 }
 
+void write_img(int *nearest_materials_image, size_t distances_size) {
+    Mat result_image(width, height, CV_8UC3);
+
+    //  Mapa de color (B, G, R) en OpenCV
+    const Vec<uchar, 3> colors[] = {
+        Vec<uchar, 3>(0, 0, 255),   // Red
+        Vec<uchar, 3>(0, 255, 0),   // Green
+        Vec<uchar, 3>(255, 0, 0),   // Blue
+        Vec<uchar, 3>(255, 255, 0), // Yellow
+        Vec<uchar, 3>(255, 0, 255), // Magenta
+        Vec<uchar, 3>(0, 255, 255), // Cyan
+        Vec<uchar, 3>(255, 255, 255), // White
+        Vec<uchar, 3>(0, 0, 0),     // Black
+        Vec<uchar, 3>(128, 128, 128), // Gray
+        Vec<uchar, 3>(64, 64, 64) // Gray
+    };
+
+    for(int i = 0; i < distances_size; i++){
+        result_image.at<Vec3b>((int)(i/height), i%height) = colors[nearest_materials_image[i]];
+    }
+
+    Mat resultT;
+    transpose(result_image,resultT); 
+    imwrite(RESULT_FILE, resultT);
+}
+
+int write_legend(string *materials, size_t file_count){
+    string colors_name[10] = {
+        "Red",
+        "Green",
+        "Blue",
+        "Yellow",
+        "Magenta",
+        "Cyan",
+        "White",
+        "Black",
+        "Ligth Gray",
+        "Gray",
+    };
+
+    ofstream out(LEGEND_FILE);
+    if(!out){
+        cout << "Error writing legend file. Aborting..." << endl;
+        return EXIT_FAILURE;
+    }
+
+    for(int i = 0; i < file_count; i++){
+        out << i+1 << ": " << materials[i] << "   =>   " << colors_name[i] << endl;
+    }
+
+    return EXIT_SUCCESS;
+}
+
 int main() {
     cout << "Starting..." << endl;
     if(read_hdr())
@@ -148,7 +207,16 @@ int main() {
     cout << "Distances read" << endl;
 
     int nearest_materials_image[distances_size];
+    cout << "Choosing materials in pixels..." << endl;
     find_nearest_materials(file_count, distances_size, all_distances, nearest_materials_image);
 
+    cout << "Writing image..." << endl;
+    write_img(nearest_materials_image, distances_size);
+
+    cout << "Writing legend..." << endl;
+    if(write_legend(materials, file_count))
+        return EXIT_FAILURE;
+
+    cout << "Execution finished successfully" << endl;
     return EXIT_SUCCESS;
 }

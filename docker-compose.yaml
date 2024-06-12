@@ -7,3 +7,11 @@ services:
       dockerfile: Dockerfile_spectrum
     volumes:
       - ./output:/hiperespectral/output
+
+  master:
+    build:
+      context: .
+      dockerfile: Dockerfile_master
+    volumes:
+      - ./output:/hiperespectral/output
+
