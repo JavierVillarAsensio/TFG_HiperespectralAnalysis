@@ -2,5 +2,7 @@ spec
 master
 output/distances/*
 output/logs/*
+output/*.txt
+output/*.jpg
 docker_commands
 *.pdf

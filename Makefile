@@ -10,6 +10,7 @@ logs_folder = logs/
 log = *.log
 
 code_master = master.cpp
+include = ./include
 exe_master = master
 
 result = result.jpg
@@ -21,7 +22,7 @@ run_master: prepare_master
 	./$(exe_master)
 
 prepare_master:
-	g++ $(code_master) -o $(exe_master) $(flags)
+	g++ $(code_master) -o $(exe_master) -I $(include)
 
 run_spectrum: clean prepare_spec
 	./$(exe_spec)

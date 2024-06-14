@@ -4,10 +4,12 @@
 #include <fstream>
 #include <unistd.h>
 
-#include <opencv2/opencv.hpp>
+//#include <opencv2/opencv.hpp>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 using namespace std;
-using namespace cv;
+//using namespace cv;
 
 #define DISTANCES_FOLDER "output/distances"
 #define HDR_PATH "jasperRidge2_R198/jasperRidge2_R198.hdr"
@@ -118,7 +120,7 @@ void find_nearest_materials(int file_count, size_t distances_size, float *all_di
         nearest_materials_images[pixel] = min_spectrum;
     }
 }
-
+/*
 void write_img(int *nearest_materials_image, size_t distances_size) {
     Mat result_image(width, height, CV_8UC3);
 
@@ -144,15 +146,46 @@ void write_img(int *nearest_materials_image, size_t distances_size) {
     transpose(result_image,resultT); 
     imwrite(RESULT_FILE, resultT);
 }
+*/
+int write_jpg(int *nearest_materials_image, size_t distances_size){
+    
+    const int channels = 3; //RGB
+    int colors[10 * channels] = {
+        255, 0, 0,      //red
+        0, 255, 0,      //blue
+        0, 0, 255,      //green
+        255, 255, 0,    //cyan
+        255, 0, 255,    //magenta
+        0, 255, 255,    //yellow
+        255, 255, 255,  //white
+        0, 0, 0,        //black
+        128, 128, 128,  //light gray
+        64, 64, 64,     //gray
+    };
+
+    unsigned char* image = new unsigned char[width * height * channels];
+
+    for (int i = 0; i < distances_size; i++){
+        image[channels * i] = static_cast<unsigned char>(colors[nearest_materials_image[i] * channels]);
+        image[(channels * i) + 1] = static_cast<unsigned char>(colors[(nearest_materials_image[i] * channels) + 1]);
+        image[(channels * i) + 2] = static_cast<unsigned char>(colors[(nearest_materials_image[i] * channels) + 2]);
+    }
+
+    if (!stbi_write_jpg(RESULT_FILE, width, height, channels, image, 100)) {
+        cout << "Error creating jpg. Aborting..." << endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
 
 int write_legend(string *materials, size_t file_count){
     string colors_name[10] = {
         "Red",
-        "Green",
         "Blue",
-        "Yellow",
-        "Magenta",
+        "Green",
         "Cyan",
+        "Magenta",
+        "Yellow",
         "White",
         "Black",
         "Ligth Gray",
@@ -211,7 +244,8 @@ int main() {
     find_nearest_materials(file_count, distances_size, all_distances, nearest_materials_image);
 
     cout << "Writing image..." << endl;
-    write_img(nearest_materials_image, distances_size);
+    if(write_jpg(nearest_materials_image, distances_size))
+        return EXIT_FAILURE;
 
     cout << "Writing legend..." << endl;
     if(write_legend(materials, file_count))

@@ -334,6 +334,8 @@ string get_output_file_name(string file_path, string folder, string extension){
 }
 
 int main(){
+    cout << "Starting program..." << endl;
+
     string file_path = get_spectrum_file_name();
 
     string distances_file = get_output_file_name(file_path, OUTPUT_DISTANCES_FOLDER, OUTPUT_DISTANCES_EXTENSION);
@@ -341,10 +343,8 @@ int main(){
 
     ofstream log(log_file);
     streambuf *std_out = cout.rdbuf();
-    cout.rdbuf(log.rdbuf());
+    //cout.rdbuf(log.rdbuf());
 
-    cout << "Starting program..." << endl;
-    
     float *reflectances = (float*)malloc(n_channels * sizeof(float));
     float *channels = (float*)malloc(n_channels * sizeof(float));
     if (reflectances == NULL || channels == NULL) {
