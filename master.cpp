@@ -4,7 +4,6 @@
 #include <fstream>
 #include <unistd.h>
 
-//#include <opencv2/opencv.hpp>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
@@ -19,7 +18,7 @@ using namespace std;
 
 #define FLOAT_MAX 3.4028234663852886e+38F
 
-#define NUMBER_OF_FILES_EXPECTED 4
+#define NUMBER_OF_FILES_EXPECTED 3
 
 #define RESULT_FILE "output/result.jpg"
 #define LEGEND_FILE "output/legend.txt"
@@ -118,35 +117,12 @@ void find_nearest_materials(int file_count, size_t distances_size, float *all_di
             }
         }
         nearest_materials_images[pixel] = min_spectrum;
+        cout << min_spectrum << " ";
+        if (pixel % 100 == 0)
+            cout << endl;
     }
 }
-/*
-void write_img(int *nearest_materials_image, size_t distances_size) {
-    Mat result_image(width, height, CV_8UC3);
 
-    //  Mapa de color (B, G, R) en OpenCV
-    const Vec<uchar, 3> colors[] = {
-        Vec<uchar, 3>(0, 0, 255),   // Red
-        Vec<uchar, 3>(0, 255, 0),   // Green
-        Vec<uchar, 3>(255, 0, 0),   // Blue
-        Vec<uchar, 3>(255, 255, 0), // Yellow
-        Vec<uchar, 3>(255, 0, 255), // Magenta
-        Vec<uchar, 3>(0, 255, 255), // Cyan
-        Vec<uchar, 3>(255, 255, 255), // White
-        Vec<uchar, 3>(0, 0, 0),     // Black
-        Vec<uchar, 3>(128, 128, 128), // Gray
-        Vec<uchar, 3>(64, 64, 64) // Gray
-    };
-
-    for(int i = 0; i < distances_size; i++){
-        result_image.at<Vec3b>((int)(i/height), i%height) = colors[nearest_materials_image[i]];
-    }
-
-    Mat resultT;
-    transpose(result_image,resultT); 
-    imwrite(RESULT_FILE, resultT);
-}
-*/
 int write_jpg(int *nearest_materials_image, size_t distances_size){
     
     const int channels = 3; //RGB

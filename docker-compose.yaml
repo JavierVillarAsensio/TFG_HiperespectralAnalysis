@@ -1,14 +1,6 @@
 version: '3.8'
 
 services:
-  spectrum.soil.mollisol:
-    build:
-      context: .
-      dockerfile: Dockerfile_spectrum
-    volumes:
-      - ./output:/hiperespectral/output
-      - ./spectrums/soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic.spectrum.txt:/hiperespectral/spectrums/soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic.spectrum.txt
-
   spectrum.soil.utisol:
     build:
       context: .
@@ -16,6 +8,14 @@ services:
     volumes:
       - ./output:/hiperespectral/output
       - ./spectrums/soil.utisol.hapludult.none.all.87p707.jhu.becknic.spectrum.txt:/hiperespectral/spectrums/soil.utisol.hapludult.none.all.87p707.jhu.becknic.spectrum.txt
+
+  spectrum.soil.mollisol:
+    build:
+      context: .
+      dockerfile: Dockerfile_spectrum
+    volumes:
+      - ./output:/hiperespectral/output
+      - ./spectrums/soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic.spectrum.txt:/hiperespectral/spectrums/soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic.spectrum.txt
 
   spectrum.vegetation.tree:
     build:

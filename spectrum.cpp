@@ -151,9 +151,11 @@ int read_hdr(float *wavelengths){
     return EXIT_SUCCESS;
 }
 
-void save_reflectances(ifstream& file, float previous_reflectance, float previous_diff, float *wavelengths, float *reflectances, int order){
+void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, int order){
     string line, segment;
     int reflectances_position = 0, wavelengths_position = n_channels - 1;
+    float previous_diff, previous_reflectance;
+
     if (order == ASC)
         wavelengths_position = 0;
     float final_wavelength = wavelengths[n_channels - 1], previous_wavelength, wavelength_read, diff, reflectance_read;
@@ -161,14 +163,12 @@ void save_reflectances(ifstream& file, float previous_reflectance, float previou
     while (getline(file, line)){ 
         istringstream line_stream(line);
 
-        getline(line_stream, segment, ' ');
-        if(segment.length() == 0)
-            getline(line_stream, segment, ' ');
+        line_stream >> segment;
 
         previous_wavelength = stof(segment);
         if(previous_wavelength <= final_wavelength){
             previous_diff = abs(previous_wavelength - final_wavelength);
-            getline(line_stream, segment, ' ');
+            line_stream >> segment;
             previous_reflectance = stof(segment);
             break;
         }
@@ -180,15 +180,14 @@ void save_reflectances(ifstream& file, float previous_reflectance, float previou
         
         istringstream line_stream(line);
 
-        getline(line_stream, segment, ' ');
-        if(segment.length() == 0)
-            getline(line_stream, segment, ' ');
+        line_stream >> segment;
         wavelength_read = stof(segment);
 
         diff = abs(wavelengths[wavelengths_position] - wavelength_read);
         if (diff < previous_diff){
             previous_diff = diff;
-            getline(line_stream, segment, ' ');
+            line_stream >> segment;
+            
             reflectance_read = stof(segment);
             previous_reflectance = reflectance_read;
         }
@@ -206,6 +205,8 @@ void save_reflectances(ifstream& file, float previous_reflectance, float previou
             }                                                             
         }
     }
+    if (reflectances[reflectances_position] == 0)
+        reflectances[reflectances_position] = previous_reflectance;
     
     if (order == DESC) {
         int swap_index = n_channels - 1;
@@ -216,12 +217,11 @@ void save_reflectances(ifstream& file, float previous_reflectance, float previou
             swap_index--;
         }
         free(aux);
-    }                                
+    }                            
 }
 
 int read_spectrum(float initial_wavelength, float final_wavelength, float *reflectances, float *wavelengths, string path){
-    int number_of_reflectances, order;
-    float reflectance_read, previous_reflectance, reflectance, previous_diff, diff, wavelength_read, previous_wavelength;
+    int order;
 
     ifstream file(path);
     if(!file.is_open()){
@@ -255,20 +255,26 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
     else
         order = ASC;
 
-    save_reflectances(file, previous_reflectance, previous_diff, wavelengths, reflectances, order);
+    save_reflectances(file, wavelengths, reflectances, order);
 
     file.close();
     return EXIT_SUCCESS;
 }
 
 void calculate_distance_of_every_pixel_to_spectrum(float *image, float *reflectances, float *distances) {
-    float sum;
+    float sum, image_reflectance;
 
     for(int height_offset = 0; height_offset < height; height_offset++){
         for(int width_offset = 0; width_offset < width; width_offset++){
             sum = 0;
             for(int band_offset = 0; band_offset < n_channels; band_offset++){
-                sum += pow((image[(height_offset * (width * n_channels)) + (band_offset * width) + width_offset] - reflectances[band_offset]), 2.0);
+                image_reflectance = image[(height_offset * (width * n_channels)) + (band_offset * width) + width_offset];
+                
+                if (image_reflectance == 0)
+                    image_reflectance = reflectances[band_offset];
+
+                //cout << "pixel " << height_offset << "x" << width_offset << " band " << band_offset << ": image " << image_reflectance << " - reflec " << reflectances[band_offset] << " = " << pow((image_reflectance - reflectances[band_offset]), 2.0) << endl;
+                sum += pow((image_reflectance - reflectances[band_offset]), 2.0);
             }
             distances[(height_offset * width) + width_offset] = sqrt(sum);
         }
