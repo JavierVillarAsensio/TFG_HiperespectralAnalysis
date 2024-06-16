@@ -1,14 +1,6 @@
 version: '3.8'
 
 services:
-  spectrum.soil.utisol:
-    build:
-      context: .
-      dockerfile: Dockerfile_spectrum
-    volumes:
-      - ./output:/hiperespectral/output
-      - ./spectrums/soil.utisol.hapludult.none.all.87p707.jhu.becknic.spectrum.txt:/hiperespectral/spectrums/soil.utisol.hapludult.none.all.87p707.jhu.becknic.spectrum.txt
-
   spectrum.soil.mollisol:
     build:
       context: .

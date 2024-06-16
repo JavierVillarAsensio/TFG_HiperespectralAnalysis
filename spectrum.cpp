@@ -217,7 +217,10 @@ void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, 
             swap_index--;
         }
         free(aux);
-    }                            
+    } 
+    for(int i = 0; i < n_channels; i++){
+        cout << i << ": " << reflectances[i] << endl;
+    }                           
 }
 
 int read_spectrum(float initial_wavelength, float final_wavelength, float *reflectances, float *wavelengths, string path){
@@ -349,7 +352,7 @@ int main(){
 
     ofstream log(log_file);
     streambuf *std_out = cout.rdbuf();
-    //cout.rdbuf(log.rdbuf());
+    cout.rdbuf(log.rdbuf());
 
     float *reflectances = (float*)malloc(n_channels * sizeof(float));
     float *channels = (float*)malloc(n_channels * sizeof(float));

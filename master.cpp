@@ -117,9 +117,6 @@ void find_nearest_materials(int file_count, size_t distances_size, float *all_di
             }
         }
         nearest_materials_images[pixel] = min_spectrum;
-        cout << min_spectrum << " ";
-        if (pixel % 100 == 0)
-            cout << endl;
     }
 }
 
@@ -128,11 +125,11 @@ int write_jpg(int *nearest_materials_image, size_t distances_size){
     const int channels = 3; //RGB
     int colors[10 * channels] = {
         255, 0, 0,      //red
-        0, 255, 0,      //blue
-        0, 0, 255,      //green
-        255, 255, 0,    //cyan
-        255, 0, 255,    //magenta
-        0, 255, 255,    //yellow
+        0, 255, 0,      //green
+        0, 0, 255,      //blue
+        255, 255, 0,    //yellow
+        255, 0, 255,    //violet
+        0, 255, 255,    //cyan
         255, 255, 255,  //white
         0, 0, 0,        //black
         128, 128, 128,  //light gray
@@ -157,11 +154,11 @@ int write_jpg(int *nearest_materials_image, size_t distances_size){
 int write_legend(string *materials, size_t file_count){
     string colors_name[10] = {
         "Red",
-        "Blue",
         "Green",
-        "Cyan",
-        "Magenta",
+        "Blue",
         "Yellow",
+        "Magenta",
+        "Cyan",
         "White",
         "Black",
         "Ligth Gray",
