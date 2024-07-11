@@ -48,6 +48,8 @@
 #define WAVELENGTH_UNIT_REFACTOR 1000   //from nanometers to micrometers
 #define PERCENTAGE_REFACTOR 100
 
+#define HOSTNAME_INDEX "HOSTNAME_INDEX"
+
 using namespace std;
 
 int width, height, n_channels = CHANNELS;
@@ -321,11 +323,17 @@ int write_distances_file(float *distances, const string output_file){
 }
 
 string get_spectrum_file_name() {
+    string str_index = getenv(HOSTNAME_INDEX);
+    int hostname_index = stoi(str_index), index = 0;
+    
     string path;
     for (const auto& entry : filesystem::directory_iterator(SPECTRUM_FOLDER)) {
         if (entry.is_regular_file()) {
-            path = entry.path().string();
-            break;
+            if(index == hostname_index-1){
+                path = entry.path().string();
+                break;
+            }
+            index++;
         }
     }
     return path;
@@ -346,13 +354,14 @@ int main(){
     cout << "Starting program..." << endl;
 
     string file_path = get_spectrum_file_name();
-
+    
     string distances_file = get_output_file_name(file_path, OUTPUT_DISTANCES_FOLDER, OUTPUT_DISTANCES_EXTENSION);
     string log_file = get_output_file_name(file_path, OUTPUT_LOG_FOLDER, OUTPUT_LOG_EXTENSION);
 
     ofstream log(log_file);
     streambuf *std_out = cout.rdbuf();
     cout.rdbuf(log.rdbuf());
+    cout << "Read spectrum: " << file_path << endl;
 
     float *reflectances = (float*)malloc(n_channels * sizeof(float));
     float *channels = (float*)malloc(n_channels * sizeof(float));
