@@ -4,5 +4,6 @@ output/distances/*
 output/logs/*
 output/*.txt
 output/*.jpg
+k8s_commands
 docker_commands
 *.pdf
