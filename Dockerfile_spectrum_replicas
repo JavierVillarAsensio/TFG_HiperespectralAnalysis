@@ -9,9 +9,8 @@ WORKDIR /hiperespectral
 
 COPY spectrum_replica.cpp /hiperespectral
 COPY jasperRidge2_R198 /hiperespectral/jasperRidge2_R198 
-COPY get_host_number.sh /hiperespectral
+COPY run_replica.sh /hiperespectral
 
-RUN g++ spectrum_swarm.cpp -o spec
-RUN source ./get_host_number.sh
+RUN g++ spectrum_replica.cpp -o spec
 
-CMD ["./spec"]
+CMD ["source ./run_replica.sh"]

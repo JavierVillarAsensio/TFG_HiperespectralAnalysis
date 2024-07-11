@@ -48,7 +48,7 @@
 #define WAVELENGTH_UNIT_REFACTOR 1000   //from nanometers to micrometers
 #define PERCENTAGE_REFACTOR 100
 
-#define HOSTNAME_INDEX "HOSTNAME_INDEX"
+#define HOSTNAME "HOSTNAME"
 
 using namespace std;
 

@@ -5,8 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_spectrum_replicas
-    deploy:
-      replicas: ${NUM_FILES}
     volumes:
       - ./output:/hiperespectral/output
       - ./spectrums:/hiperespectral/spectrums

@@ -8,3 +8,5 @@ else
   exit 1
 fi
 export HOSTNAME_INDEX
+
+./spec
