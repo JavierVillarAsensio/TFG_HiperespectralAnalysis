@@ -3,32 +3,32 @@ version: '3.8'
 services:
   spectrum.soil.mollisol:
     build:
-      context: .
-      dockerfile: Dockerfile_spectrum
+      context: ..
+      dockerfile: ../Dockerfile_spectrum
     volumes:
-      - ./output:/hiperespectral/output
-      - ./spectrums/soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic.spectrum.txt:/hiperespectral/spectrums/soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic.spectrum.txt
+      - ../output:/hiperespectral/output
+      - ../spectrums/soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic.spectrum.txt:/hiperespectral/spectrums/soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic.spectrum.txt
 
   spectrum.vegetation.tree:
     build:
-      context: .
-      dockerfile: Dockerfile_spectrum
+      context: ..
+      dockerfile: ../Dockerfile_spectrum
     volumes:
-      - ./output:/hiperespectral/output
-      - ./spectrums/vegetation.tree.eucalyptus.maculata.vswir.jpl087.jpl.asd.spectrum.txt:/hiperespectral/spectrums/vegetation.tree.eucalyptus.maculata.vswir.jpl087.jpl.asd.spectrum.txt
+      - ../output:/hiperespectral/output
+      - ../spectrums/vegetation.tree.eucalyptus.maculata.vswir.jpl087.jpl.asd.spectrum.txt:/hiperespectral/spectrums/vegetation.tree.eucalyptus.maculata.vswir.jpl087.jpl.asd.spectrum.txt
 
   spectrum.water.tapwater:
     build:
-      context: .
-      dockerfile: Dockerfile_spectrum
+      context: ..
+      dockerfile: ../Dockerfile_spectrum
     volumes:
-      - ./output:/hiperespectral/output
-      - ./spectrums/water.tapwater.none.liquid.all.tapwater.jhu.becknic.spectrum.txt:/hiperespectral/spectrums/water.tapwater.none.liquid.all.tapwater.jhu.becknic.spectrum.txt
+      - ../output:/hiperespectral/output
+      - ../spectrums/water.tapwater.none.liquid.all.tapwater.jhu.becknic.spectrum.txt:/hiperespectral/spectrums/water.tapwater.none.liquid.all.tapwater.jhu.becknic.spectrum.txt
 
   master:
     build:
-      context: .
-      dockerfile: Dockerfile_master
+      context: ..
+      dockerfile: ../Dockerfile_master
     volumes:
-      - ./output:/hiperespectral/output
+      - ../output:/hiperespectral/output
 
