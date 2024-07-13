@@ -1,8 +1,31 @@
 #!/bin/bash
 
+REPLICA_IMAGE_NAME=tfg-replica
+MASTER_IMAGE_NAME=tfg-master
+IMAGE_TAG=latest
+
+#creating images inf necessary
+if docker images | grep -q "$REPLICA_IMAGE_NAME\s*$IMAGE_TAG"; then
+  echo "La imagen $REPLICA_IMAGE_NAME:$IMAGE_TAG ya existe. No se necesita construir."
+else
+  echo "La imagen $REPLICA_IMAGE_NAME:$IMAGE_TAG no existe. Construyendo la imagen..."
+  docker build -f Dockerfile_replicas . -t tfg-replica:latest
+fi
+
+if docker images | grep -q "$MASTER_IMAGE_NAME\s*$IMAGE_TAG"; then
+  echo "La imagen $MASTER_IMAGE_NAME:$IMAGE_TAG ya existe. No se necesita construir."
+else
+  echo "La imagen $MASTER_IMAGE_NAME:$IMAGE_TAG no existe. Construyendo la imagen..."
+  docker build -f Dockerfile_master . -t tfg-master:latest
+fi
+
 #count spectrums for docker replicas
 FOLDER="spectrums"
 NUM_FILES=$(find "$FOLDER" -type f | wc -l)
-echo NUM_FILES=$NUM_FILES > .env
 
-docker-compose -f docker-compose-replicas.yaml up --scale spectrum=$NUM_FILES
+#start replicas indicating its file index
+for ((i = 1; i <= $NUM_FILES; i++)); do
+  echo SERVICE_NAME=spectrum-$i > specs.env
+  docker-compose -f docker-compose-replicas.yaml up -d --scale spectrum=$i --no-recreate
+  sleep 1
+done

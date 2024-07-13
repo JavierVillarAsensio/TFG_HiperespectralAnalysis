@@ -2,9 +2,11 @@ version: '3.8'
 
 services:
   spectrum:
+    env_file:
+      - specs.env
     build:
       context: .
-      dockerfile: Dockerfile_spectrum_replicas
+      dockerfile: Dockerfile_replicas
     volumes:
       - ./output:/hiperespectral/output
       - ./spectrums:/hiperespectral/spectrums
@@ -15,4 +17,3 @@ services:
       dockerfile: Dockerfile_master
     volumes:
       - ./output:/hiperespectral/output
-

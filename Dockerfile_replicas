@@ -12,5 +12,6 @@ COPY jasperRidge2_R198 /hiperespectral/jasperRidge2_R198
 COPY run_replica.sh /hiperespectral
 
 RUN g++ spectrum_replica.cpp -o spec
+RUN chmod 700 run_replica.sh
 
-CMD ["source ./run_replica.sh"]
+CMD [ "/bin/sh", "-c", "./run_replica.sh && ./spec"]

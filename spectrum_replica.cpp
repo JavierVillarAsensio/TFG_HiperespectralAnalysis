@@ -48,7 +48,7 @@
 #define WAVELENGTH_UNIT_REFACTOR 1000   //from nanometers to micrometers
 #define PERCENTAGE_REFACTOR 100
 
-#define HOSTNAME "HOSTNAME"
+#define INDEX_FILE "index.txt"
 
 using namespace std;
 
@@ -322,9 +322,31 @@ int write_distances_file(float *distances, const string output_file){
     return EXIT_SUCCESS;
 }
 
+int get_index() {
+    ifstream inputFile(INDEX_FILE);
+    int number;
+
+    if (inputFile.is_open()) {
+        inputFile >> number;
+
+        if (inputFile.fail()) {
+            cout << "Error reading the number from the file." << std::endl;
+            return -1;
+        }
+
+        inputFile.close();
+    } else {
+        cout << "Unable to open index file." << std::endl;
+        return -1;
+    }
+
+    return number;
+}
+
 string get_spectrum_file_name() {
-    string str_index = getenv(HOSTNAME_INDEX);
-    int hostname_index = stoi(str_index), index = 0;
+    int hostname_index = get_index(), index = 0;
+    if (hostname_index == -1)
+        return "error";
     
     string path;
     for (const auto& entry : filesystem::directory_iterator(SPECTRUM_FOLDER)) {
@@ -354,6 +376,8 @@ int main(){
     cout << "Starting program..." << endl;
 
     string file_path = get_spectrum_file_name();
+    if (file_path.compare("error") == 0)
+        return EXIT_FAILURE;
     
     string distances_file = get_output_file_name(file_path, OUTPUT_DISTANCES_FOLDER, OUTPUT_DISTANCES_EXTENSION);
     string log_file = get_output_file_name(file_path, OUTPUT_LOG_FOLDER, OUTPUT_LOG_EXTENSION);
