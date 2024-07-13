@@ -4,7 +4,7 @@ REPLICA_IMAGE_NAME=tfg-replica
 MASTER_IMAGE_NAME=tfg-master
 IMAGE_TAG=latest
 
-#creating images inf necessary
+#creating images if necessary
 if docker images | grep -q "$REPLICA_IMAGE_NAME\s*$IMAGE_TAG"; then
   echo "La imagen $REPLICA_IMAGE_NAME:$IMAGE_TAG ya existe. No se necesita construir."
 else

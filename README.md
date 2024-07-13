@@ -19,7 +19,7 @@ Se necesita un sistema operativo basado en **UNIX** que tenga disponibles:
 ## Ejecución
 Hay 3 maneras de ejecutar según el desarrollo iba avanzando se han ido mejorando:
 1. Con make (no recomendado). Se necesita ir indicando una por una la firma de referencia en el archivo spectrum.cpp y después ejecutar el master con *make run_spectrum* lo compila y ejecuta y con *make run_master* ejecuta el master, con *make* ejecuta el spectrum que haya junto con el master.
-2. Versión estática. Dentro del directorio *static_version* ejecutar el comando *docker-compose up*. Para borrar los contenedores al acabar *docker-compose down*.
+2. Versión estática. Crear las imágenes con el script *images.sh* y dentro del directorio *static_version* ejecutar el comando *docker-compose up*. Para borrar los contenedores al acabar *docker-compose down*.
 3. Versión final (recomendado). En el directorio raiz ejecutar el script *run.sh*. Para borrar los contenedores al acabar *docker-compose -f docker-compose-replicas.yaml down*.
 \
 Cuando acabe la ejecución de cualquiera de las opciones se pueden borrar los archivo de la carpeta *output* con el comando *make clean*.
