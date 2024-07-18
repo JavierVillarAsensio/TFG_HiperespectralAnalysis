@@ -25,6 +25,7 @@ using namespace std;
 #define RESULT_FILE "output/result.jpg"
 #define LEGEND_FILE "output/legend.txt"
 #define COMPARATION_FILE "output/comparation"
+#define MASTER_LOG_FILE "output/logs/master.log"
 
 #define N_MATERIALS_TO_COMPARE 4
 
@@ -300,7 +301,11 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
 }
 
 int main() {
-    cout << "Starting..." << endl;
+    ofstream log(MASTER_LOG_FILE);
+    streambuf *std_out = cout.rdbuf();
+    cout.rdbuf(log.rdbuf());
+
+    cout << "Starting master..." << endl;
     if(read_hdr())
         return EXIT_FAILURE;
 
