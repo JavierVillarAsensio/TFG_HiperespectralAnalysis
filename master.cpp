@@ -24,7 +24,7 @@ using namespace std;
 
 #define RESULT_FILE "output/result.jpg"
 #define LEGEND_FILE "output/legend.txt"
-#define COMPARATION_FILE "output/comparation.jpg"
+#define COMPARATION_FILE "output/comparation"
 
 #define N_MATERIALS_TO_COMPARE 4
 
@@ -184,10 +184,12 @@ int write_legend(string *materials, size_t file_count){
 }
 
 int write_comparation_jpg(int *nearest_materials_image, int *to_compare, size_t distances_size){
-    int comparation[distances_size];
+    int comparation[distances_size], coincidences = 0;
     for(int pixel = 0; pixel < distances_size; pixel++){
-        if(nearest_materials_image[pixel] == to_compare[pixel])
+        if(nearest_materials_image[pixel] == to_compare[pixel]){
             comparation[pixel] = 1;
+            coincidences++;
+        }
         else
             comparation[pixel] = 0;
     }
@@ -206,7 +208,16 @@ int write_comparation_jpg(int *nearest_materials_image, int *to_compare, size_t 
         image[(channels * i) + 2] = static_cast<unsigned char>(colors[(comparation[i] * channels) + 2]);
     }
 
-    if (!stbi_write_jpg(COMPARATION_FILE, width, height, channels, image, 100)) {
+    float perc_coincidence = ((float)coincidences/(float)distances_size)*100;
+    string str = to_string(perc_coincidence);
+    size_t decimal_pos = str.find('.');
+    if (decimal_pos != string::npos) {
+        str = str.substr(0, decimal_pos + 3); // +3 porque queremos 2 decimales después del punto
+    }
+    string filename_str = COMPARATION_FILE + str + ".jpg";
+    const char *filename = filename_str.c_str();
+
+    if (!stbi_write_jpg(filename, width, height, channels, image, 100)) {
         cout << "Error creating comparation jpg. Aborting..." << endl;
         return EXIT_FAILURE;
     }
@@ -239,7 +250,7 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
             }
         }
     }
-    
+
     mat = Mat_Open("end4.mat", MAT_ACC_RDONLY);
     if (mat == nullptr) {
         cout << "Error al abrir el archivo MAT" << endl;
