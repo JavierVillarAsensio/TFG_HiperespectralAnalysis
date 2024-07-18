@@ -16,13 +16,17 @@ exe_master = master
 result = result.jpg
 legend = legend.txt
 
+code_compare = compare_result.cpp
+exe_compare = compare
+lib_compare = lmatio
+
 all: run_spectrum run_master
 
 run_master: prepare_master
 	./$(exe_master)
 
 prepare_master:
-	g++ $(code_master) -o $(exe_master) -I $(include)
+	g++ $(code_master) -o $(exe_master) -I $(include) -$(lib_compare)
 
 run_spectrum: clean prepare_spec
 	./$(exe_spec)

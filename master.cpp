@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
+#include <matio.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -17,11 +18,15 @@ using namespace std;
 #define COLS_FIELD "samples"
 
 #define FLOAT_MAX 3.4028234663852886e+38F
+#define FLOAT_MIN 1.175494e-38F
 
 #define NUMBER_OF_FILES_EXPECTED 3
 
 #define RESULT_FILE "output/result.jpg"
 #define LEGEND_FILE "output/legend.txt"
+#define COMPARATION_FILE "output/comparation.jpg"
+
+#define N_MATERIALS_TO_COMPARE 4
 
 int width, height;
 
@@ -178,6 +183,111 @@ int write_legend(string *materials, size_t file_count){
     return EXIT_SUCCESS;
 }
 
+int write_comparation_jpg(int *nearest_materials_image, int *to_compare, size_t distances_size){
+    int comparation[distances_size];
+    for(int pixel = 0; pixel < distances_size; pixel++){
+        if(nearest_materials_image[pixel] == to_compare[pixel])
+            comparation[pixel] = 1;
+        else
+            comparation[pixel] = 0;
+    }
+
+    const int channels = 3; //RGB
+    int colors[2 * channels] = {
+        255, 0, 0,      //red
+        0, 255, 0     //green
+    };
+
+    unsigned char* image = new unsigned char[width * height * channels];
+
+    for (int i = 0; i < distances_size; i++){
+        image[channels * i] = static_cast<unsigned char>(colors[comparation[i] * channels]);
+        image[(channels * i) + 1] = static_cast<unsigned char>(colors[(comparation[i] * channels) + 1]);
+        image[(channels * i) + 2] = static_cast<unsigned char>(colors[(comparation[i] * channels) + 2]);
+    }
+
+    if (!stbi_write_jpg(COMPARATION_FILE, width, height, channels, image, 100)) {
+        cout << "Error creating comparation jpg. Aborting..." << endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
+
+int compare_result(int *nearest_materials_image, size_t distances_size, string *materials) {
+    mat_t *mat;
+    matvar_t *matvar;
+    int aux_to_compare[distances_size];
+    
+    string materials_groundtruth[N_MATERIALS_TO_COMPARE] =
+    {
+        "vegetation", //0
+        "water",      //1
+        "soil",       //2
+        "road"        //3
+    };
+
+    
+
+    int index_translation[N_MATERIALS_TO_COMPARE];
+    string material;
+    for(int n_materials = 0; n_materials < N_MATERIALS_TO_COMPARE; n_materials++){
+        size_t posicion = materials[n_materials].find('.');
+        material = materials[n_materials].substr(0, posicion);
+        for (int n_materials_groundtruth = 0; n_materials_groundtruth < N_MATERIALS_TO_COMPARE; n_materials_groundtruth++){
+            if(material.compare(materials_groundtruth[n_materials_groundtruth]) == 0){
+                index_translation[n_materials_groundtruth] = n_materials;
+            }
+        }
+    }
+    
+    mat = Mat_Open("end4.mat", MAT_ACC_RDONLY);
+    if (mat == nullptr) {
+        cout << "Error al abrir el archivo MAT" << endl;
+        return EXIT_FAILURE;
+    }
+
+    matvar_t *matVar = Mat_VarRead(mat, (char*)"A") ;
+    if(matVar)
+    {
+        unsigned xSize = matVar->nbytes / matVar->data_size;
+        const double *xData = static_cast<const double*>(matVar->data);
+
+        int n_pixels_to_compare = xSize/N_MATERIALS_TO_COMPARE;
+        double abundance, aux_abundance;
+        int most_abundant;
+        for(int pixel=0; pixel<n_pixels_to_compare; pixel++)
+        {
+            abundance = FLOAT_MIN;
+            most_abundant = -1;
+            
+            for (int mat_index = 0; mat_index < N_MATERIALS_TO_COMPARE; mat_index++)
+            {
+                aux_abundance = xData[(pixel*4) + mat_index];
+                if(aux_abundance > abundance){
+                    abundance = aux_abundance;
+                    most_abundant = mat_index;
+                }
+            }
+            aux_to_compare[pixel] = index_translation[most_abundant];
+        }
+    }
+    
+    int to_compare[distances_size], column, row;
+    for (size_t i = 0; i < distances_size; i++)
+    {
+        row = (i+1)%width;
+        column = i/height;
+        to_compare[i] = aux_to_compare[row*height + column];
+    }
+
+    Mat_Close(mat);
+
+    if(write_comparation_jpg(nearest_materials_image, to_compare, distances_size))
+        return EXIT_FAILURE;
+
+    return EXIT_SUCCESS;
+}
+
 int main() {
     cout << "Starting..." << endl;
     if(read_hdr())
@@ -222,6 +332,10 @@ int main() {
 
     cout << "Writing legend..." << endl;
     if(write_legend(materials, file_count))
+        return EXIT_FAILURE;
+
+    cout << "Comparing with groundtruth..." << endl;
+    if(compare_result(nearest_materials_image, distances_size, materials))
         return EXIT_FAILURE;
 
     cout << "Execution finished successfully" << endl;
