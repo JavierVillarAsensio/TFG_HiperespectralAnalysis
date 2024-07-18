@@ -235,7 +235,7 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
         "vegetation", //0
         "water",      //1
         "soil",       //2
-        "road"        //3
+        "manmade"        //3
     };
 
     

@@ -160,7 +160,7 @@ void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, 
 
     if (order == ASC)
         wavelengths_position = 0;
-    float final_wavelength = wavelengths[n_channels - 1], previous_wavelength, wavelength_read, diff, reflectance_read;
+    float final_wavelength = wavelengths[n_channels - 1], previous_wavelength, wavelength_read, diff, prev_diff, reflectance;
 
     while (getline(file, line)){ 
         istringstream line_stream(line);
@@ -174,9 +174,12 @@ void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, 
             previous_reflectance = stof(segment);
             break;
         }
-    }
+    }    
 
-    while(getline(file, line)){
+    float reflectance_read;
+    int jump = 1, lines_read = 1;
+    getline(file, line);
+    while(true){
         if(reflectances_position == n_channels)
             break;
         
@@ -185,13 +188,16 @@ void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, 
         line_stream >> segment;
         wavelength_read = stof(segment);
 
-        diff = abs(wavelengths[wavelengths_position] - wavelength_read);
+        previous_diff = abs(wavelengths[wavelengths_position] - previous_wavelength);
+        diff = fabs(wavelengths[wavelengths_position] - wavelength_read);
         if (diff < previous_diff){
             previous_diff = diff;
             line_stream >> segment;
             
             reflectance_read = stof(segment);
             previous_reflectance = reflectance_read;
+            previous_wavelength = wavelength_read;
+            getline(file, line);
         }
         else {
             reflectances[reflectances_position] = previous_reflectance;
@@ -206,7 +212,9 @@ void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, 
                 previous_diff = FLOAT_MAX;
             }                                                             
         }
+        
     }
+
     if (reflectances[reflectances_position] == 0)
         reflectances[reflectances_position] = previous_reflectance;
     
@@ -221,7 +229,7 @@ void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, 
         free(aux);
     } 
     for(int i = 0; i < n_channels; i++){
-        cout << i << ": " << reflectances[i] << endl;
+        cout << i << ": " << wavelengths[i] << " - " << reflectances[i] << endl;
     }                           
 }
 

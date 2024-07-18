@@ -44,3 +44,4 @@ clean:
 	rm -f $(output_folder)$(logs_folder)$(log)
 	rm -f $(output_folder)$(result)
 	rm -f $(output_folder)$(legend)
+	rm -f $(output_folder)*.jpg
