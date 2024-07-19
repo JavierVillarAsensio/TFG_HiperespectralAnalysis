@@ -25,6 +25,6 @@ NUM_FILES=$(find "$FOLDER" -type f | wc -l)
 
 #start replicas indicating its file index
 for ((i = 1; i <= $NUM_FILES; i++)); do
-  echo SERVICE_NAME=spectrum-$i > specs.env
+  echo -e "NUM_FILES=$NUM_FILES\nSERVICE_NAME=spectrum-$i" > specs.env
   docker-compose -f docker-compose-replicas.yaml up -d --scale spectrum=$i --no-recreate
 done

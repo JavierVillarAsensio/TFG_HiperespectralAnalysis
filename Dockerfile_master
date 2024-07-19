@@ -1,16 +1,20 @@
 FROM ubuntu
 
-RUN apt-get update && \
-    apt-get install -y
-
 FROM gcc:latest
+
+RUN apt-get update && \
+    apt-get install -y 
 
 WORKDIR /hiperespectral
 
 COPY master.cpp /hiperespectral
 COPY jasperRidge2_R198/jasperRidge2_R198.hdr /hiperespectral/jasperRidge2_R198/jasperRidge2_R198.hdr
 COPY include/stb_image_write.h /hiperespectral/include/stb_image_write.h
+COPY run_master.sh /hiperespectral
+COPY end4.mat /hiperespectral
 
-RUN g++ master.cpp -o master -I ./include
+RUN apt-get install libmatio-dev -y
+RUN g++ master.cpp -o master -I ./include -lmatio
+RUN chmod 700 run_master.sh
 
-CMD ["./master"]
+CMD ["/bin/sh", "-c", "./run_master.sh && ./master"]

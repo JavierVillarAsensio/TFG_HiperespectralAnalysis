@@ -4,6 +4,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <matio.h>
+#include <cstdlib>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -20,14 +21,14 @@ using namespace std;
 #define FLOAT_MAX 3.4028234663852886e+38F
 #define FLOAT_MIN 1.175494e-38F
 
-#define NUMBER_OF_FILES_EXPECTED 3
-
 #define RESULT_FILE "output/result.jpg"
 #define LEGEND_FILE "output/legend.txt"
 #define COMPARATION_FILE "output/comparation"
 #define MASTER_LOG_FILE "output/logs/master.log"
 
 #define N_MATERIALS_TO_COMPARE 4
+#define N_FILES_FILE "n_files.txt"
+#define MAT_FILE "end4.mat"
 
 int width, height;
 
@@ -154,6 +155,7 @@ int write_jpg(int *nearest_materials_image, size_t distances_size){
         cout << "Error creating jpg. Aborting..." << endl;
         return EXIT_FAILURE;
     }
+    filesystem::permissions(RESULT_FILE, filesystem::perms::owner_all | filesystem::perms::group_all, filesystem::perm_options::add);
     return EXIT_SUCCESS;
 }
 
@@ -222,6 +224,7 @@ int write_comparation_jpg(int *nearest_materials_image, int *to_compare, size_t 
         cout << "Error creating comparation jpg. Aborting..." << endl;
         return EXIT_FAILURE;
     }
+    filesystem::permissions(filename, filesystem::perms::owner_all | filesystem::perms::group_all, filesystem::perm_options::add);
     return EXIT_SUCCESS;
 }
 
@@ -252,7 +255,7 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
         }
     }
 
-    mat = Mat_Open("end4.mat", MAT_ACC_RDONLY);
+    mat = Mat_Open(MAT_FILE, MAT_ACC_RDONLY);
     if (mat == nullptr) {
         cout << "Error al abrir el archivo MAT" << endl;
         return EXIT_FAILURE;
@@ -300,11 +303,32 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
     return EXIT_SUCCESS;
 }
 
+int get_n_files() {
+    ifstream inputFile(N_FILES_FILE);
+    int number;
+
+    if (inputFile.is_open()) {
+        inputFile >> number;
+
+        if (inputFile.fail()) {
+            cout << "Error reading the number from the file." << std::endl;
+            return -1;
+        }
+
+        inputFile.close();
+    } else {
+        cout << "Unable to open n_files file." << std::endl;
+        return -1;
+    }
+
+    return number;
+}
+
 int main() {
     ofstream log(MASTER_LOG_FILE);
     streambuf *std_out = cout.rdbuf();
     cout.rdbuf(log.rdbuf());
-
+    
     cout << "Starting master..." << endl;
     if(read_hdr())
         return EXIT_FAILURE;
@@ -318,7 +342,10 @@ int main() {
 
     cout << "Counting files..." << endl;
     size_t file_count = count_files();
-    while(file_count != NUMBER_OF_FILES_EXPECTED){
+    
+    int n_files = get_n_files();
+    cout << "n_files: " << n_files << endl;
+    while(file_count != n_files){
         sleep(5);
         file_count = count_files();
     }
