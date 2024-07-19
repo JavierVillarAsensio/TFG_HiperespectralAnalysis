@@ -8,8 +8,9 @@ FROM gcc:latest
 WORKDIR /hiperespectral
 
 COPY spectrum_replica.cpp /hiperespectral
-COPY jasperRidge2_R198 /hiperespectral/jasperRidge2_R198 
-COPY run_replica.sh /hiperespectral
+COPY jasperRidge2_R198/jasperRidge2_R198.hdr /hiperespectral/jasperRidge2_R198/jasperRidge2_R198.hdr
+COPY jasperRidge2_R198/jasperRidge2_R198.img /hiperespectral/jasperRidge2_R198/jasperRidge2_R198.img
+COPY scripts/run_replica.sh /hiperespectral
 
 RUN g++ spectrum_replica.cpp -o spec
 RUN chmod 700 run_replica.sh

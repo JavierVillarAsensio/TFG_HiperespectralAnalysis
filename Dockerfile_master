@@ -9,9 +9,9 @@ WORKDIR /hiperespectral
 
 COPY master.cpp /hiperespectral
 COPY jasperRidge2_R198/jasperRidge2_R198.hdr /hiperespectral/jasperRidge2_R198/jasperRidge2_R198.hdr
+COPY jasperRidge2_R198/end4.mat /hiperespectral/jasperRidge2_R198/end4.mat
 COPY include/stb_image_write.h /hiperespectral/include/stb_image_write.h
-COPY run_master.sh /hiperespectral
-COPY end4.mat /hiperespectral
+COPY scripts/run_master.sh /hiperespectral
 
 RUN apt-get install libmatio-dev -y
 RUN g++ master.cpp -o master -I ./include -lmatio

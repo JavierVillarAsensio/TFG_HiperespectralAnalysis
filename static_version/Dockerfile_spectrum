@@ -7,7 +7,7 @@ FROM gcc:latest
 
 WORKDIR /hiperespectral
 
-COPY static_version/spectrum.cpp /hiperespectral
+COPY spectrum.cpp /hiperespectral
 COPY ../jasperRidge2_R198 /hiperespectral/jasperRidge2_R198 
 
 RUN g++ spectrum.cpp -o spec

@@ -28,7 +28,7 @@ using namespace std;
 
 #define N_MATERIALS_TO_COMPARE 4
 #define N_FILES_FILE "n_files.txt"
-#define MAT_FILE "end4.mat"
+#define MAT_FILE "jasperRidge2_R198/end4.mat"
 
 int width, height;
 
