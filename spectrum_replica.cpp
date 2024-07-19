@@ -332,10 +332,13 @@ int write_distances_file(float *distances, const string output_file){
 
 int get_index() {
     string value = getenv(INDEX_FILE_VAR), numberStr;
+    cout << "value: " << value << endl;
     size_t pos = value.find('-');
 
     if (pos != string::npos)
         numberStr = value.substr(pos + 1);
+
+    cout << "numberStr: " << numberStr << endl;
 
     return stoi(numberStr);
 }
