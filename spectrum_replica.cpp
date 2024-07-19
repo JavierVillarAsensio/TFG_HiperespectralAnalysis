@@ -342,6 +342,7 @@ int get_index() {
 
 string get_spectrum_file_name(int *file_index) {
     int hostname_index = get_index(), index = 0;
+    cout << "hostname_index: " << hostname_index << endl;
     file_index[0] = hostname_index;
     
     string path;

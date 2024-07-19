@@ -328,6 +328,7 @@ int main() {
     const char* value = getenv(NUM_FILES_VAR);
     int n_files = stoi(value);
 
+    cout << "Number of files: " << n_files << endl;
     while(file_count != n_files){
         sleep(5);
         file_count = count_files();
