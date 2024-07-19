@@ -30,6 +30,8 @@ using namespace std;
 #define N_FILES_FILE "n_files.txt"
 #define MAT_FILE "jasperRidge2_R198/end4.mat"
 
+#define NUM_FILES_VAR "NUM_FILES"
+
 int width, height;
 
 int read_hdr(){
@@ -303,27 +305,6 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
     return EXIT_SUCCESS;
 }
 
-int get_n_files() {
-    ifstream inputFile(N_FILES_FILE);
-    int number;
-
-    if (inputFile.is_open()) {
-        inputFile >> number;
-
-        if (inputFile.fail()) {
-            cout << "Error reading the number from the file." << std::endl;
-            return -1;
-        }
-
-        inputFile.close();
-    } else {
-        cout << "Unable to open n_files file." << std::endl;
-        return -1;
-    }
-
-    return number;
-}
-
 int main() {
     ofstream log(MASTER_LOG_FILE);
     streambuf *std_out = cout.rdbuf();
@@ -343,13 +324,14 @@ int main() {
     cout << "Counting files..." << endl;
     size_t file_count = count_files();
     
-    int n_files = get_n_files();
-    cout << "n_files: " << n_files << endl;
+    cout << "Getting number of files..." << endl;
+    const char* value = getenv(NUM_FILES_VAR);
+    int n_files = stoi(value);
+
     while(file_count != n_files){
         sleep(5);
         file_count = count_files();
     }
-    cout << "Files counted: " << file_count << endl;
 
     cout << "Allocating dinamic memory..." << endl;
     float *all_distances = (float*)malloc(distances_size * file_count * sizeof(float));

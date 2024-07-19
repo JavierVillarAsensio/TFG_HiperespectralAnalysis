@@ -11,10 +11,8 @@ COPY master.cpp /hiperespectral
 COPY jasperRidge2_R198/jasperRidge2_R198.hdr /hiperespectral/jasperRidge2_R198/jasperRidge2_R198.hdr
 COPY jasperRidge2_R198/end4.mat /hiperespectral/jasperRidge2_R198/end4.mat
 COPY include/stb_image_write.h /hiperespectral/include/stb_image_write.h
-COPY scripts/run_master.sh /hiperespectral
 
 RUN apt-get install libmatio-dev -y
 RUN g++ master.cpp -o master -I ./include -lmatio
-RUN chmod 700 run_master.sh
 
-CMD ["/bin/sh", "-c", "./run_master.sh && ./master"]
+CMD ["./master"]

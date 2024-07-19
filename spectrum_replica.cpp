@@ -48,7 +48,7 @@
 #define WAVELENGTH_UNIT_REFACTOR 1000   //from nanometers to micrometers
 #define PERCENTAGE_REFACTOR 100
 
-#define INDEX_FILE "index.txt"
+#define INDEX_FILE_VAR "SERVICE_NAME"
 
 using namespace std;
 
@@ -331,30 +331,14 @@ int write_distances_file(float *distances, const string output_file){
 }
 
 int get_index() {
-    ifstream inputFile(INDEX_FILE);
-    int number;
+    const char* value = getenv(INDEX_FILE_VAR);
 
-    if (inputFile.is_open()) {
-        inputFile >> number;
-
-        if (inputFile.fail()) {
-            cout << "Error reading the number from the file." << std::endl;
-            return -1;
-        }
-
-        inputFile.close();
-    } else {
-        cout << "Unable to open index file." << std::endl;
-        return -1;
-    }
-
-    return number;
+    return stoi(value);
 }
 
-string get_spectrum_file_name() {
+string get_spectrum_file_name(int *file_index) {
     int hostname_index = get_index(), index = 0;
-    if (hostname_index == -1)
-        return "error";
+    *file_index = hostname_index;
     
     string path;
     for (const auto& entry : filesystem::directory_iterator(SPECTRUM_FOLDER)) {
@@ -382,10 +366,9 @@ string get_output_file_name(string file_path, string folder, string extension){
 
 int main(){
     cout << "Starting program..." << endl;
+    int file_index;
 
-    string file_path = get_spectrum_file_name();
-    if (file_path.compare("error") == 0)
-        return EXIT_FAILURE;
+    string file_path = get_spectrum_file_name(&file_index);
     
     string distances_file = get_output_file_name(file_path, OUTPUT_DISTANCES_FOLDER, OUTPUT_DISTANCES_EXTENSION);
     string log_file = get_output_file_name(file_path, OUTPUT_LOG_FOLDER, OUTPUT_LOG_EXTENSION);
@@ -393,6 +376,8 @@ int main(){
     ofstream log(log_file);
     streambuf *std_out = cout.rdbuf();
     cout.rdbuf(log.rdbuf());
+
+    cout << "File index: " << file_index << endl;
     cout << "Read spectrum: " << file_path << endl;
 
     float *reflectances = (float*)malloc(n_channels * sizeof(float));
