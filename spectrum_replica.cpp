@@ -332,21 +332,17 @@ int write_distances_file(float *distances, const string output_file){
 
 int get_index() {
     string value = getenv(INDEX_FILE_VAR), numberStr;
-    cout << "value: " << value << endl;
     size_t pos = value.find('-');
 
     if (pos != string::npos)
         numberStr = value.substr(pos + 1);
 
-    cout << "numberStr: " << numberStr << endl;
 
     return stoi(numberStr);
 }
 
-string get_spectrum_file_name(int *file_index) {
+string get_spectrum_file_name() {
     int hostname_index = get_index(), index = 0;
-    cout << "hostname_index: " << hostname_index << endl;
-    file_index[0] = hostname_index;
     
     string path;
     for (const auto& entry : filesystem::directory_iterator(SPECTRUM_FOLDER)) {
@@ -374,9 +370,8 @@ string get_output_file_name(string file_path, string folder, string extension){
 
 int main(){
     cout << "Starting program..." << endl;
-    int file_index[0];
 
-    string file_path = get_spectrum_file_name(file_index);
+    string file_path = get_spectrum_file_name();
     
     string distances_file = get_output_file_name(file_path, OUTPUT_DISTANCES_FOLDER, OUTPUT_DISTANCES_EXTENSION);
     string log_file = get_output_file_name(file_path, OUTPUT_LOG_FOLDER, OUTPUT_LOG_EXTENSION);
@@ -388,7 +383,6 @@ int main(){
     float *reflectances = (float*)malloc(n_channels * sizeof(float));
     float *channels = (float*)malloc(n_channels * sizeof(float));
 
-    cout << "File index: " << file_index[0] << endl;
     cout << "Read spectrum file: " << file_path << endl;
 
     

@@ -9,14 +9,14 @@ if docker images | grep -q "$REPLICA_IMAGE_NAME\s*$IMAGE_TAG"; then
   echo "La imagen $REPLICA_IMAGE_NAME:$IMAGE_TAG ya existe. No se necesita construir."
 else
   echo "La imagen $REPLICA_IMAGE_NAME:$IMAGE_TAG no existe. Construyendo la imagen..."
-  docker build -f Dockerfile_replicas . -t tfg-replica:latest
+  docker build -f Dockerfile_replicas . --no-cache=true -t tfg-replica:latest 
 fi
 
 if docker images | grep -q "$MASTER_IMAGE_NAME\s*$IMAGE_TAG"; then
   echo "La imagen $MASTER_IMAGE_NAME:$IMAGE_TAG ya existe. No se necesita construir."
 else
   echo "La imagen $MASTER_IMAGE_NAME:$IMAGE_TAG no existe. Construyendo la imagen..."
-  docker build -f Dockerfile_master . -t tfg-master:latest
+  docker build -f Dockerfile_master . --no-cache=true -t tfg-master:latest
 fi
 
 #count spectrums for docker replicas
