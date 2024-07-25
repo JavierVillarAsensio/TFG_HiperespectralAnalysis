@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <matio.h>
 #include <cstdlib>
+#include <iomanip>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -25,14 +26,14 @@ using namespace std;
 #define LEGEND_FILE "output/legend.txt"
 #define COMPARATION_FILE "output/comparation"
 #define MASTER_LOG_FILE "output/logs/master.log"
+#define CONFUSION_FILE "output/confusion_matrix.txt"
 
-#define N_MATERIALS_TO_COMPARE 4
 #define N_FILES_FILE "n_files.txt"
 #define MAT_FILE "jasperRidge2_R198/end4.mat"
 
 #define NUM_FILES_VAR "NUM_FILES"
 
-int width, height;
+int width, height, n_files;
 
 int read_hdr(){
     float number;
@@ -188,15 +189,44 @@ int write_legend(string *materials, size_t file_count){
     return EXIT_SUCCESS;
 }
 
-int write_comparation_jpg(int *nearest_materials_image, int *to_compare, size_t distances_size){
-    int comparation[distances_size], coincidences = 0;
+void print_separation_line(ofstream &stream){
+    for (int sep = 0; sep < 56; sep++){
+        stream << "-";
+    }
+    stream << endl;
+}
+
+int write_comparation(int *nearest_materials_image, int *to_compare, size_t distances_size){
+    int comparation[distances_size], coincidences = 0, confusion_matrix[n_files][n_files];
+
     for(int pixel = 0; pixel < distances_size; pixel++){
+        confusion_matrix[nearest_materials_image[pixel]][to_compare[pixel]]++;
         if(nearest_materials_image[pixel] == to_compare[pixel]){
             comparation[pixel] = 1;
             coincidences++;
         }
         else
             comparation[pixel] = 0;
+    }
+
+    ofstream out(CONFUSION_FILE);
+    if(!out){
+        cout << "Error writing confusion matrix file. Aborting..." << endl;
+        return EXIT_FAILURE;
+    }
+
+    int columnWidth = 6;
+    out << "lines = material index\tcolumns = count" << endl;
+    out << "\t     " << setw(columnWidth) << 1 << "  |  " << setw(columnWidth) << 2 << "  |  " << setw(columnWidth) << 3 << "  |  " << setw(columnWidth) << 4 << "  |  " << endl;
+    print_separation_line(out);
+    print_separation_line(out);
+    for (int i = 0; i < n_files; i++){
+        out << "\t" << i+1 << "  ||";
+        for (int j = 0; j < n_files; j++){
+            out << setw(columnWidth) << confusion_matrix[i][j] << "  |  ";
+        }
+        out << endl;
+        print_separation_line(out);
     }
 
     const int channels = 3; //RGB
@@ -235,22 +265,20 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
     matvar_t *matvar;
     int aux_to_compare[distances_size];
     
-    string materials_groundtruth[N_MATERIALS_TO_COMPARE] =
+    string materials_groundtruth[n_files] =
     {
         "vegetation", //0
         "water",      //1
         "soil",       //2
         "manmade"        //3
-    };
+    };    
 
-    
-
-    int index_translation[N_MATERIALS_TO_COMPARE];
+    int index_translation[n_files];
     string material;
-    for(int n_materials = 0; n_materials < N_MATERIALS_TO_COMPARE; n_materials++){
+    for(int n_materials = 0; n_materials < n_files; n_materials++){
         size_t posicion = materials[n_materials].find('.');
         material = materials[n_materials].substr(0, posicion);
-        for (int n_materials_groundtruth = 0; n_materials_groundtruth < N_MATERIALS_TO_COMPARE; n_materials_groundtruth++){
+        for (int n_materials_groundtruth = 0; n_materials_groundtruth < n_files; n_materials_groundtruth++){
             if(material.compare(materials_groundtruth[n_materials_groundtruth]) == 0){
                 index_translation[n_materials_groundtruth] = n_materials;
             }
@@ -269,7 +297,7 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
         unsigned xSize = matVar->nbytes / matVar->data_size;
         const double *xData = static_cast<const double*>(matVar->data);
 
-        int n_pixels_to_compare = xSize/N_MATERIALS_TO_COMPARE;
+        int n_pixels_to_compare = xSize/n_files;
         double abundance, aux_abundance;
         int most_abundant;
         for(int pixel=0; pixel<n_pixels_to_compare; pixel++)
@@ -277,9 +305,9 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
             abundance = FLOAT_MIN;
             most_abundant = -1;
             
-            for (int mat_index = 0; mat_index < N_MATERIALS_TO_COMPARE; mat_index++)
+            for (int mat_index = 0; mat_index < n_files; mat_index++)
             {
-                aux_abundance = xData[(pixel*4) + mat_index];
+                aux_abundance = xData[(pixel*n_files) + mat_index];
                 if(aux_abundance > abundance){
                     abundance = aux_abundance;
                     most_abundant = mat_index;
@@ -299,7 +327,7 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
 
     Mat_Close(mat);
 
-    if(write_comparation_jpg(nearest_materials_image, to_compare, distances_size))
+    if(write_comparation(nearest_materials_image, to_compare, distances_size))
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
@@ -326,7 +354,7 @@ int main() {
     
     cout << "Getting number of files..." << endl;
     const char* value = getenv(NUM_FILES_VAR);
-    int n_files = stoi(value);
+    n_files = stoi(value);
 
     cout << "Number of files: " << n_files << endl;
     while(file_count != n_files){

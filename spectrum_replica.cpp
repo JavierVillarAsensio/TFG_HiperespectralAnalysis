@@ -91,7 +91,6 @@ int read_img(float *img) {
 
 int read_hdr(float *wavelengths){
     float number;
-    string value;
 
     ifstream file(HDR_PATH);
     if(!file.is_open()){
@@ -99,17 +98,15 @@ int read_hdr(float *wavelengths){
         return(EXIT_FAILURE);
     }
 
-    string line;
+    string line, key, value;
     int index = 0;
     bool waves_read = false;
     while (getline(file, line)) {
         istringstream lineStream(line);
-        string key;
         if (getline(lineStream, key, '=')) {
             key.erase(key.find_last_not_of(" \n\r\t")+1); //erase spaces or any dirty char
+
             if(key == WAVELENGTH_FIELD){
-                
-                string value;
                 while (!waves_read) {
                     getline(file, line, ',');
                     stringstream numbers(line);
@@ -160,7 +157,7 @@ void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, 
 
     if (order == ASC)
         wavelengths_position = 0;
-    float final_wavelength = wavelengths[n_channels - 1], previous_wavelength, wavelength_read, diff, prev_diff, reflectance;
+    float final_wavelength = wavelengths[n_channels - 1], previous_wavelength, wavelength_read, diff, reflectance;
 
     while (getline(file, line)){ 
         istringstream line_stream(line);
@@ -177,7 +174,6 @@ void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, 
     }    
 
     float reflectance_read;
-    int jump = 1, lines_read = 1;
     getline(file, line);
     while(true){
         if(reflectances_position == n_channels)
@@ -203,14 +199,13 @@ void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, 
             reflectances[reflectances_position] = previous_reflectance;
             reflectances_position++;
             
-            if(wavelengths_position >= 0 && order == DESC){
+            if(wavelengths_position >= 0 && order == DESC)
                 wavelengths_position--;
-                previous_diff = FLOAT_MAX;
-            }
-            else if(wavelengths_position <= n_channels && order == ASC){
+
+            else if(wavelengths_position <= n_channels && order == ASC)
                 wavelengths_position++;
-                previous_diff = FLOAT_MAX;
-            }                                                             
+            
+            previous_diff = FLOAT_MAX;                                                             
         }
         
     }
