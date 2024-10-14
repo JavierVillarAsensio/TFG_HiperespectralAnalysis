@@ -1,8 +1,9 @@
 spec
 master
+test
 output/distances/*
 output/logs/*
 output/*.txt
 output/*.jpg
 *.pdf
-.vscode
+.vscode/
