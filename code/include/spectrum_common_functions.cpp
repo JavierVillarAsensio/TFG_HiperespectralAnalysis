@@ -1,10 +1,5 @@
-/*
-    The format is bil so it is read the line of every channel
-
-    so the pointer goes:
-    100 first pixels of band #1, 100 first pixels of band #2...
-    when bands are finished reads next line of every channel
-*/
+#include "spectrum_common_functions.h"
+//#include <opencv2/opencv.hpp>
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
@@ -16,48 +11,20 @@
 #include <math.h>
 #include <algorithm>
 #include <filesystem>
-//#include <opencv2/opencv.hpp>
-
-#define DATA_SIZE sizeof(short)
-#define CHANNELS 198
-
-#define IMG_PATH "jasperRidge2_R198/jasperRidge2_R198.img"
-#define HDR_PATH "jasperRidge2_R198/jasperRidge2_R198.hdr"
-
-#define OUTPUT_DISTANCES_FOLDER "output/distances"
-#define OUTPUT_DISTANCES_EXTENSION ".bin"
-#define OUTPUT_LOG_FOLDER "output/logs"
-#define OUTPUT_LOG_EXTENSION ".log"
-#define SPECTRUM_FOLDER "spectrums"
-
-#define WAVELENGTH_FIELD "wavelength"
-#define ROWS_FIELD "lines"
-#define COLS_FIELD "samples"
-#define CHANNELS_FIELD "bands"
-#define END_FIELD "}"
-
-#define SPECTRUM_FIRST_VALUE_FIELD "First X Value"
-#define SPECTRUM_LAST_VALUE_FIELD "Last X Value" 
-#define FROM_LAST_VALUE_TO_VALUES 3
-
-#define ASC 2   // 0 and 1 are EXIT_SUCCESS and EXIT_FAILURE
-#define DESC 3
-
-#define FLOAT_MAX 3.4028234663852886e+38F
-
-#define WAVELENGTH_UNIT_REFACTOR 1000   //from nanometers to micrometers
-#define PERCENTAGE_REFACTOR 100
-
-#define INDEX_FILE_VAR "SERVICE_NAME"
+#include <cctype>
+#include <string>
+#include "config.h"
 
 using namespace std;
 
-int width, height, n_channels = CHANNELS;
+string wavelength_unit_spec;
 
-int read_img(float *img) {
+////////////////////////COMMON FUNCTIONS////////////////////////
+
+int read_img_bil(float *img, const char* filename) {
     int n_pixels = width * height * n_channels;
 
-    ifstream file(IMG_PATH, ios::binary);
+    ifstream file(filename, ios::binary);
     if(!file.is_open()){
         cout << "Error opening the img file, it could not be opened. Aborting." << endl;
         return(EXIT_FAILURE);
@@ -67,18 +34,20 @@ int read_img(float *img) {
     char buffer[DATA_SIZE];
     short int value;
     float refl;
-    while(index < n_pixels){
-        file.read(buffer, DATA_SIZE);
 
-        memcpy(&value, buffer, DATA_SIZE);
+    //skip header bytes
+    streampos offset = streampos(header_offset);
+    file.seekg(offset, ios::beg);
+    while(index < n_pixels){
+        file.read(reinterpret_cast<char*>(&value), DATA_SIZE);
+
         refl = static_cast<float>(value)/PERCENTAGE_REFACTOR;
         if(refl < 0)
             refl = 0;
 
-        img[index] = refl;
-
-        index++;
+        img[index++] = refl;
     }
+
     file.close();
 
     if (index != n_pixels){
@@ -87,6 +56,21 @@ int read_img(float *img) {
     }
     else
         return EXIT_SUCCESS;
+}
+
+int get_factor_scale(string unit) {
+
+    if (!unit.empty() && unit.back() == 's') 
+        unit.pop_back(); //Erase plural
+
+    string lower_case_wavelength_unit = unit;
+    transform(unit.begin(), unit.end(), lower_case_wavelength_unit.begin(),[](unsigned char c){ return tolower(c); });
+
+    for(int i = 0; i < SIZE_OF_KNOWN_METRICS; i++)
+        if (lower_case_wavelength_unit == KNOWN_METRICS[i])
+            return SCALE_FACTORS[i];
+
+    return 100; //to check later if any of the wavelengths is known
 }
 
 int read_hdr(float *wavelengths){
@@ -128,6 +112,7 @@ int read_hdr(float *wavelengths){
                 string value;
                 getline(lineStream, value, '=');
                 n_channels = stoi(value);
+                wavelengths = (float *)malloc(n_channels * sizeof(float));
             }
             else if(key == ROWS_FIELD){
                 string value;
@@ -139,12 +124,25 @@ int read_hdr(float *wavelengths){
                 getline(lineStream, value, '=');
                 width = stoi(value);
             }
+            else if(key == HEADER_OFFSET_FIELD){
+                string value;
+                getline(lineStream, value, '=');
+                header_offset = stoi(value);
+            }
+            else if(key == WAVELENGTH_UNIT_FIELD){
+                getline(lineStream, wavelength_unit_hdr, '=');
+            }
         }
     }
 
-    for(int i = 0; i < n_channels; i++){
-        wavelengths[i] = wavelengths[i] / WAVELENGTH_UNIT_REFACTOR;
+    double wavelength_unit_refactor = pow(10, get_factor_scale(wavelength_unit_hdr) - get_factor_scale(wavelength_unit_spec));
+    if (wavelength_unit_refactor > 100 || wavelength_unit_refactor < 100){
+        cout << "The wavelength unit read from .hdr or from spectrum was not found or not known" << endl;
+        return EXIT_FAILURE;
     }
+
+    for(int i = 0; i < n_channels; i++)
+        wavelengths[i] = wavelengths[i] / wavelength_unit_refactor;
 
     file.close();
     return EXIT_SUCCESS;
@@ -244,11 +242,20 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
     while (getline(file, line)) {
         istringstream line_stream(line);
         getline(line_stream, segment, ':');
-        if (segment == SPECTRUM_FIRST_VALUE_FIELD){
+
+        if (segment == WAVELENGTH_UNIT_FIELD){
+            getline(line_stream, segment, ':');
+            size_t open = segment.find('('), close = segment.find(')');
+            if (open != string::npos && close != string::npos && close > open)
+                wavelength_unit_spec = segment.substr(open + 1, close - open - 1);
+        }
+
+        else if (segment == SPECTRUM_FIRST_VALUE_FIELD){
             getline(line_stream, segment, ':');
             first_value = stof(segment);
         }
-        if (segment == SPECTRUM_LAST_VALUE_FIELD){
+
+        else if (segment == SPECTRUM_LAST_VALUE_FIELD){
             getline(line_stream, segment, ':');
             last_value = stof(segment);
             for(int i = 0; i < FROM_LAST_VALUE_TO_VALUES; i++){
@@ -276,12 +283,11 @@ void calculate_distance_of_every_pixel_to_spectrum(float *image, float *reflecta
         for(int width_offset = 0; width_offset < width; width_offset++){
             sum = 0;
             for(int band_offset = 0; band_offset < n_channels; band_offset++){
-                image_reflectance = image[(height_offset * (width * n_channels)) + (band_offset * width) + width_offset];
+                image_reflectance = image[(height_offset*(width*n_channels))+(band_offset*width)+width_offset];
                 
                 if (image_reflectance == 0)
                     image_reflectance = reflectances[band_offset];
 
-                //cout << "pixel " << height_offset << "x" << width_offset << " band " << band_offset << ": image " << image_reflectance << " - reflec " << reflectances[band_offset] << " = " << pow((image_reflectance - reflectances[band_offset]), 2.0) << endl;
                 sum += pow((image_reflectance - reflectances[band_offset]), 2.0);
             }
             distances[(height_offset * width) + width_offset] = sqrt(sum);
@@ -361,69 +367,4 @@ string get_output_file_name(string file_path, string folder, string extension){
     out_name.replace(last_dot, out_name.size(), extension);
 
     return out_name;
-}
-
-int main(){
-    cout << "Starting program..." << endl;
-
-    string file_path = get_spectrum_file_name();
-    
-    string distances_file = get_output_file_name(file_path, OUTPUT_DISTANCES_FOLDER, OUTPUT_DISTANCES_EXTENSION);
-    string log_file = get_output_file_name(file_path, OUTPUT_LOG_FOLDER, OUTPUT_LOG_EXTENSION);
-
-    ofstream log(log_file);
-    streambuf *std_out = cout.rdbuf();
-    cout.rdbuf(log.rdbuf());
-
-    float *reflectances = (float*)malloc(n_channels * sizeof(float));
-    float *channels = (float*)malloc(n_channels * sizeof(float));
-
-    cout << "Read spectrum file: " << file_path << endl;
-
-    
-    if (reflectances == NULL || channels == NULL) {
-        cout << "Error allocating memory. Aborting..." << endl;
-        return EXIT_FAILURE;
-    }
-    cout << "Memory allocated" << endl;
-
-    if (read_hdr(channels))
-        return EXIT_FAILURE;
-    cout << "File .hdr read" << endl;
-
-    int n_pixels = width * height * n_channels; 
-    float *image = (float*)malloc(n_pixels * sizeof(float));
-    float *distances = (float*)malloc(width * height * sizeof(float));
-
-    if (read_spectrum(channels[0], channels[n_channels - 1], reflectances, channels, file_path))
-        return EXIT_FAILURE; 
-
-    cout << "Spectrum read" << endl;
-    cout << "Freeing channels..." << endl;
-    free(channels);
-
-    if (read_img(image))
-        return EXIT_FAILURE;
-    cout << "Image read" << endl;
-
-    cout << "Calculating distances..." << endl;
-    calculate_distance_of_every_pixel_to_spectrum(image, reflectances, distances);
-
-    //print_img(distances);
-
-    cout << "Writing distances file..." << endl;
-    if (write_distances_file(distances, distances_file))
-        return EXIT_FAILURE;
-
-    cout << "Freeing reflectances..." << endl;
-    free(reflectances);
-    cout << "Freeing image..." << endl;
-    free(image);
-    
-    cout << "Freed" << endl;
-    cout << "Execution finished successfully" << endl;
-
-    cout.rdbuf(std_out);
-
-    return(EXIT_SUCCESS);
 }

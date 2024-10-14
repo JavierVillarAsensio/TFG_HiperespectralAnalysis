@@ -6,4 +6,3 @@ output/*.txt
 output/*.jpg
 *.pdf
 .vscode
-Documento/*

@@ -4,6 +4,8 @@
         "chrono": "cpp",
         "ostream": "cpp",
         "fstream": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "iomanip": "cpp",
+        "*.tcc": "cpp"
     }
 }

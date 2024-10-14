@@ -6,34 +6,18 @@
 #include <matio.h>
 #include <cstdlib>
 #include <iomanip>
+#include <thread>
+#include <condition_variable>
+#include <mutex>
+#include "config.h"
+#include "master_common_functions.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-using namespace std;
-//using namespace cv;
-
-#define DISTANCES_FOLDER "output/distances"
-#define HDR_PATH "jasperRidge2_R198/jasperRidge2_R198.hdr"
-
-#define ROWS_FIELD "lines"
-#define COLS_FIELD "samples"
-
-#define FLOAT_MAX 3.4028234663852886e+38F
-#define FLOAT_MIN 1.175494e-38F
-
-#define RESULT_FILE "output/result.jpg"
-#define LEGEND_FILE "output/legend.txt"
-#define COMPARATION_FILE "output/comparation"
-#define MASTER_LOG_FILE "output/logs/master.log"
-#define CONFUSION_FILE "output/confusion_matrix.txt"
-
-#define N_FILES_FILE "n_files.txt"
-#define MAT_FILE "jasperRidge2_R198/end4.mat"
-
-#define NUM_FILES_VAR "NUM_FILES"
-
-int width, height, n_files;
+mutex mtx;
+condition_variable cv;
+int file_count = 0;
 
 int read_hdr(){
     float number;
@@ -72,8 +56,8 @@ int read_hdr(){
     return EXIT_SUCCESS;
 }
 
-size_t count_files() {
-    size_t count = 0;
+int count_files() {
+    int count = 0;
 
     for (const auto& entry : filesystem::directory_iterator(DISTANCES_FOLDER)) {
         if (entry.is_regular_file()) 
@@ -83,12 +67,12 @@ size_t count_files() {
     return count;
 }
 
-int read_all_distances(float *all_distances, size_t distances_size, string *materials) {
+int read_all_distances(float *all_distances, size_t distances_size, string *materials, string distances_folder) {
     float distances[distances_size];
     string path, mat_name;
     int file_position = 0;
 
-    for (const auto& entry : filesystem::directory_iterator(DISTANCES_FOLDER)) {
+    for (const auto& entry : filesystem::directory_iterator(distances_folder)) {
         if (entry.is_regular_file()) {
             path = entry.path().string();
             mat_name = path.substr(0, path.find_last_of("."));
@@ -196,7 +180,7 @@ void print_separation_line(ofstream &stream){
     stream << endl;
 }
 
-int write_comparation(int *nearest_materials_image, int *to_compare, size_t distances_size){
+int write_comparison(int *nearest_materials_image, int *to_compare, size_t distances_size){
     int comparation[distances_size], coincidences = 0, confusion_matrix[n_files][n_files];
 
     for(int pixel = 0; pixel < distances_size; pixel++){
@@ -327,71 +311,27 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
 
     Mat_Close(mat);
 
-    if(write_comparation(nearest_materials_image, to_compare, distances_size))
+    if(write_comparison(nearest_materials_image, to_compare, distances_size))
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
 }
 
-int main() {
-    ofstream log(MASTER_LOG_FILE);
-    streambuf *std_out = cout.rdbuf();
-    cout.rdbuf(log.rdbuf());
-    
-    cout << "Starting master..." << endl;
-    if(read_hdr())
-        return EXIT_FAILURE;
+void monitor_files(int expected_n_files){
+    while (true) {
+        this_thread::sleep_for(chrono::seconds(1)); // Espera 1 segundo entre verificaciones
 
-    size_t distances_size = width * height;
-
-    if (!filesystem::exists(DISTANCES_FOLDER) || !filesystem::is_directory(DISTANCES_FOLDER)){
-        cout << "The folder does not exist. Aborting..." << endl;
-        return EXIT_FAILURE;
-    }
-
-    cout << "Counting files..." << endl;
-    size_t file_count = count_files();
-    
-    cout << "Getting number of files..." << endl;
-    const char* value = getenv(NUM_FILES_VAR);
-    n_files = stoi(value);
-
-    cout << "Number of files: " << n_files << endl;
-    while(file_count != n_files){
-        sleep(5);
+        lock_guard<mutex> lock(mtx);
         file_count = count_files();
+
+        if (file_count >= expected_n_files) {
+            cv.notify_all();
+            break;
+        }
     }
+}
 
-    cout << "Allocating dinamic memory..." << endl;
-    float *all_distances = (float*)malloc(distances_size * file_count * sizeof(float));
-    if (all_distances == NULL){
-        cout << "Error allocating dinamic memory. Aborting..." << endl;
-        return EXIT_FAILURE;
-    }
-    cout << "Memory allocated" << endl;
-
-    cout << "Reading all distances..." << endl;
-    string materials[file_count];
-    if(read_all_distances(all_distances, distances_size, materials))
-        return EXIT_FAILURE;
-    cout << "Distances read" << endl;
-
-    int nearest_materials_image[distances_size];
-    cout << "Choosing materials in pixels..." << endl;
-    find_nearest_materials(file_count, distances_size, all_distances, nearest_materials_image);
-
-    cout << "Writing image..." << endl;
-    if(write_jpg(nearest_materials_image, distances_size))
-        return EXIT_FAILURE;
-
-    cout << "Writing legend..." << endl;
-    if(write_legend(materials, file_count))
-        return EXIT_FAILURE;
-
-    cout << "Comparing with groundtruth..." << endl;
-    if(compare_result(nearest_materials_image, distances_size, materials))
-        return EXIT_FAILURE;
-
-    cout << "Execution finished successfully" << endl;
-    return EXIT_SUCCESS;
+void wait_files(int expected_n_files) {
+    unique_lock<mutex> lock(mtx);
+    cv.wait(lock, [expected_n_files] {return (file_count == expected_n_files);});
 }
