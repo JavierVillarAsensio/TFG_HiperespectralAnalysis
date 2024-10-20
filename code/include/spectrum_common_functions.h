@@ -10,7 +10,7 @@ extern std::string wavelength_unit_hdr;
 
 int read_img_bil(float *img, const char* filename);
 int get_factor_scale(std::string unit);
-int read_hdr(float *wavelengths);
+int read_hdr(float **wavelengths, std::string filename);
 void save_reflectances(std::ifstream& file, float *wavelengths, float *reflectances, int order);
 int read_spectrum(float initial_wavelength, float final_wavelength, float *reflectances, float *wavelengths, std::string path);
 void calculate_distance_of_every_pixel_to_spectrum(float *image, float *reflectances, float *distances);

@@ -18,6 +18,7 @@
 using namespace std;
 
 string wavelength_unit_spec;
+double wavelength_unit_refactor;
 
 ////////////////////////COMMON FUNCTIONS////////////////////////
 
@@ -41,7 +42,7 @@ int read_img_bil(float *img, const char* filename) {
     while(index < n_pixels){
         file.read(reinterpret_cast<char*>(&value), DATA_SIZE);
 
-        refl = static_cast<float>(value)/PERCENTAGE_REFACTOR;
+        refl = static_cast<float>(value)/wavelength_unit_refactor;
         if(refl < 0)
             refl = 0;
 
@@ -65,25 +66,26 @@ int get_factor_scale(string unit) {
 
     string lower_case_wavelength_unit = unit;
     transform(unit.begin(), unit.end(), lower_case_wavelength_unit.begin(),[](unsigned char c){ return tolower(c); });
+    lower_case_wavelength_unit.erase(remove(lower_case_wavelength_unit.begin(), lower_case_wavelength_unit.end(), ' '), lower_case_wavelength_unit.end());
 
     for(int i = 0; i < SIZE_OF_KNOWN_METRICS; i++)
         if (lower_case_wavelength_unit == KNOWN_METRICS[i])
             return SCALE_FACTORS[i];
 
-    return 100; //to check later if any of the wavelengths is known
+    return -1; //to check later if any of the wavelengths is known
 }
 
-int read_hdr(float *wavelengths){
+int read_hdr(float **wavelengths, const string filename){
     float number;
 
-    ifstream file(HDR_PATH);
+    ifstream file(filename);
     if(!file.is_open()){
         cout << "Error opening the hdr file, it could not be opened. Aborting." << endl;
         return(EXIT_FAILURE);
     }
 
     string line, key, value;
-    int index = 0;
+    int index = 0, a;
     bool waves_read = false;
     while (getline(file, line)) {
         istringstream lineStream(line);
@@ -97,52 +99,39 @@ int read_hdr(float *wavelengths){
                     while(getline(numbers, value) && !waves_read){
                         if(value.size() > 0){
                             number = stof(value);
-                            wavelengths[index] = number;
+                            (*wavelengths)[index] = number;
                             index++;
                             
                         }
-                        if(value.find(END_FIELD) != string::npos){
+                        if(value.find(END_FIELD) != string::npos)
                             waves_read = true;
-                        }
                     }
                 }
             }
             //set size of img to read
             else if(key == CHANNELS_FIELD){
-                string value;
                 getline(lineStream, value, '=');
                 n_channels = stoi(value);
-                wavelengths = (float *)malloc(n_channels * sizeof(float));
+                *wavelengths = (float *)malloc(n_channels * sizeof(float));
             }
             else if(key == ROWS_FIELD){
-                string value;
                 getline(lineStream, value, '=');
                 height = stoi(value);
             }
             else if(key == COLS_FIELD){
-                string value;
                 getline(lineStream, value, '=');
                 width = stoi(value);
             }
             else if(key == HEADER_OFFSET_FIELD){
-                string value;
                 getline(lineStream, value, '=');
                 header_offset = stoi(value);
             }
             else if(key == WAVELENGTH_UNIT_FIELD){
                 getline(lineStream, wavelength_unit_hdr, '=');
+                wavelength_unit_hdr.erase(remove(wavelength_unit_hdr.begin(), wavelength_unit_hdr.end(), ' '), wavelength_unit_hdr.end());
             }
         }
     }
-
-    double wavelength_unit_refactor = pow(10, get_factor_scale(wavelength_unit_hdr) - get_factor_scale(wavelength_unit_spec));
-    if (wavelength_unit_refactor > 100 || wavelength_unit_refactor < 100){
-        cout << "The wavelength unit read from .hdr or from spectrum was not found or not known" << endl;
-        return EXIT_FAILURE;
-    }
-
-    for(int i = 0; i < n_channels; i++)
-        wavelengths[i] = wavelengths[i] / wavelength_unit_refactor;
 
     file.close();
     return EXIT_SUCCESS;
@@ -205,7 +194,6 @@ void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, 
             
             previous_diff = FLOAT_MAX;                                                             
         }
-        
     }
 
     if (reflectances[reflectances_position] == 0)
@@ -220,10 +208,7 @@ void save_reflectances(ifstream& file, float *wavelengths, float *reflectances, 
             swap_index--;
         }
         free(aux);
-    } 
-    for(int i = 0; i < n_channels; i++){
-        cout << i << ": " << wavelengths[i] << " - " << reflectances[i] << endl;
-    }                           
+    }                         
 }
 
 int read_spectrum(float initial_wavelength, float final_wavelength, float *reflectances, float *wavelengths, string path){
@@ -243,7 +228,7 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
         istringstream line_stream(line);
         getline(line_stream, segment, ':');
 
-        if (segment == WAVELENGTH_UNIT_FIELD){
+        if (segment == SPEC_WAVELENGTH_UNIT_FIELD){
             getline(line_stream, segment, ':');
             size_t open = segment.find('('), close = segment.find(')');
             if (open != string::npos && close != string::npos && close > open)
@@ -265,6 +250,15 @@ int read_spectrum(float initial_wavelength, float final_wavelength, float *refle
         }
     }
 
+    wavelength_unit_refactor = pow(10, get_factor_scale(wavelength_unit_hdr) - get_factor_scale(wavelength_unit_spec));
+    if (wavelength_unit_refactor == -1){
+        cout << "The wavelength unit read from .hdr or from spectrum was not found or not known" << endl;
+        return EXIT_FAILURE;
+    }
+
+    for(int i = 0; i < n_channels; i++)
+        wavelengths[i] = wavelengths[i] / wavelength_unit_refactor;
+
     if (first_value > last_value)
         order = DESC;
     else
@@ -283,7 +277,7 @@ void calculate_distance_of_every_pixel_to_spectrum(float *image, float *reflecta
         for(int width_offset = 0; width_offset < width; width_offset++){
             sum = 0;
             for(int band_offset = 0; band_offset < n_channels; band_offset++){
-                image_reflectance = image[(height_offset*(width*n_channels))+(band_offset*width)+width_offset];
+                 image_reflectance = image[(height_offset*(width*n_channels))+(band_offset*width)+width_offset];
                 
                 if (image_reflectance == 0)
                     image_reflectance = reflectances[band_offset];
@@ -318,6 +312,13 @@ void print_img(float *distances) {
 
 int write_distances_file(float *distances, const string output_file){
     size_t distances_size = (height * width)*sizeof(float);
+
+    error_code ec;
+    if(!filesystem::exists(OUTPUT_DISTANCES_FOLDER))
+        if(!filesystem::create_directories(OUTPUT_DISTANCES_FOLDER, ec)){
+            cout << "Error creating output/distances/ directory: " << ec.value() << " " << ec.message() << endl;
+            return EXIT_FAILURE;
+        }
 
     ofstream out(output_file, ios::binary);
     if(!out){
@@ -361,7 +362,7 @@ string get_spectrum_file_name() {
 string get_output_file_name(string file_path, string folder, string extension){ 
     string out_name = file_path;
     
-    size_t slash = out_name.find_first_of("/");
+    size_t slash = out_name.find_last_of("/");
     out_name.replace(0, slash, folder);
     size_t last_dot = out_name.find_last_of(".");
     out_name.replace(last_dot, out_name.size(), extension);

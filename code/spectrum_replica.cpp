@@ -28,7 +28,7 @@ int main(){
 
     cout << "Reading .hdr file..." << endl;
     float *channels;
-    if (read_hdr(channels))
+    if (read_hdr(&channels, HDR_PATH))
         return EXIT_FAILURE;
     cout << "File .hdr read" << endl;
 

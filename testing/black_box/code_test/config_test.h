@@ -5,23 +5,16 @@
 #include <iostream>
 
 ////////////GENERAL DATA////////////
-#define TEST_IMG_FILE_PATH "../jasperRidge2_R198.img"
-#define TEST_SPEC_FILE_PATH "../spectrums_test/"
-#define PROJECT_ROOT "../../../"
+#define TEST_IMG_FILE_PATH "testing/black_box/jasperRidge2_R198_test/jasperRidge2_R198.img"
+#define TEST_HDR_FILE_PATH "testing/black_box/jasperRidge2_R198_test/jasperRidge2_R198.hdr"
+#define TEST_SPEC_FILE_PATH "testing/black_box/spectrums_test/"
+#define TEST_RESULT_JPG_PATH "output/result.jpg"
 
 extern const std::string ERROR = "\033[31mERROR\033[0m";   // Red
 extern const std::string PASS  = "\033[32mPASS\033[0m";    // Green
 extern const std::string TEST_RESULTS[2] = {PASS, ERROR};
 
 constexpr int N_TEST_SPECTRUM_FILES  = 2;
-
-////////////IMAGE DATA////////////
-constexpr short int TESTING_IMG[] = {
-    9, 11,   19, 21,   8, 12,
-    18, 22,   10, 10,   20, 20,
-    8, 12,   19, 21,   9, 11
-};
-size_t TESTING_IMG_N_ELEMENTS = sizeof(TESTING_IMG) / sizeof(TESTING_IMG[0]);
 
 ////////////HDR DATA////////////
 constexpr int TEST_SAMPLES = 3;
@@ -30,8 +23,16 @@ constexpr int TEST_BANDS   = 2;
 constexpr int TEST_HEADER_OFFSET = 0;
 constexpr int TEST_DATA_TYPE = 2;
 const std::string TEST_WAVELENGTH_UNITS = "Nanometers";
-constexpr int TEST_SCALE_FACTOR = 10000.000000;
+constexpr int TEST_SCALE_FACTOR = 1000.000000;
 constexpr float WAVELENGTHS[TEST_BANDS] = {2.0, 4.0};
+
+////////////IMAGE DATA////////////
+constexpr short int TESTING_IMG[TEST_BANDS * TEST_SAMPLES * TEST_LINES] = {
+    9000, 11000,   19000, 21000,   8000, 12000,
+    18000, 22000,   10000, 10000,   20000, 20000,
+    8000, 12000,   19000, 21000,   9000, 11000
+};
+size_t TESTING_IMG_N_ELEMENTS = sizeof(TESTING_IMG) / sizeof(TESTING_IMG[0]);
 
 ////////////SPECTRUMS DATA////////////
 constexpr float TEST_SPECTRUMS_CORRECT_REFLECTANCES[N_TEST_SPECTRUM_FILES] = {10.0, 20.0};

@@ -23,6 +23,7 @@ exe_compare = compare
 test_folder = testing/black_box/code_test/
 code_test = spectrum_test.cpp
 exe_test = test
+hdr_test = testing/black_box/jasperRidge2_R198_test/jasperRidge2_R198.img
 
 all: run_spectrum run_master
 
@@ -52,3 +53,4 @@ clean:
 	rm -f $(exe_master)
 	rm -f $(exe_test)
 	rm -rf $(output_folder)*
+	rm -f $(hdr_test)
