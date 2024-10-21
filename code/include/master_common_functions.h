@@ -6,8 +6,10 @@
 
 using namespace std;
 
-extern int width, height, n_files;
+extern int width, height;
+extern size_t file_count;
 
+int count_files(const string directory);
 int read_hdr();
 int count_files();
 int read_all_distances(float *all_distances, size_t distances_size, string *materials, string distances_folder);

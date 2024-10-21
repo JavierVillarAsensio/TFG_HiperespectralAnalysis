@@ -18,5 +18,6 @@ int write_distances_file(float *distances, const std::string output_file);
 int get_index();
 std::string get_spectrum_file_name();
 std::string get_output_file_name(std::string file_path, std::string folder, std::string extension);
+int create_needed_directories(const std::string directory);
 
 #endif

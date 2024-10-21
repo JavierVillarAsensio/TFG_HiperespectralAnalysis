@@ -42,7 +42,7 @@ int read_img_bil(float *img, const char* filename) {
     while(index < n_pixels){
         file.read(reinterpret_cast<char*>(&value), DATA_SIZE);
 
-        refl = static_cast<float>(value)/wavelength_unit_refactor;
+        refl = static_cast<float>(value)/PERCENTAGE_REFACTOR;
         if(refl < 0)
             refl = 0;
 
@@ -313,18 +313,15 @@ void print_img(float *distances) {
 int write_distances_file(float *distances, const string output_file){
     size_t distances_size = (height * width)*sizeof(float);
 
-    error_code ec;
-    if(!filesystem::exists(OUTPUT_DISTANCES_FOLDER))
-        if(!filesystem::create_directories(OUTPUT_DISTANCES_FOLDER, ec)){
-            cout << "Error creating output/distances/ directory: " << ec.value() << " " << ec.message() << endl;
-            return EXIT_FAILURE;
-        }
-
     ofstream out(output_file, ios::binary);
     if(!out){
         cout << "Error writing distances file. Aborting..." << endl;
         return EXIT_FAILURE;
     }
+
+    cout << output_file << ":" << distances[0] << endl;
+    for(int i = 0; i < 10000; i++)
+        //cout << distances[i] << endl;
 
     out.write(reinterpret_cast<char*>(distances), distances_size);
     out.close();
@@ -368,4 +365,14 @@ string get_output_file_name(string file_path, string folder, string extension){
     out_name.replace(last_dot, out_name.size(), extension);
 
     return out_name;
+}
+
+int create_needed_directories(const string directory){
+    error_code ec;
+    if(!filesystem::exists(directory))
+        if(!filesystem::create_directories(directory, ec)){
+            cout << "Error creating " << directory << " directory: " << ec.value() << " " << ec.message() << endl;
+            return EXIT_FAILURE;
+        }
+    return EXIT_SUCCESS;
 }

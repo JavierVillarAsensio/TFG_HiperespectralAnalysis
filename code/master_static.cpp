@@ -18,10 +18,14 @@
 using namespace std;
 //using namespace cv;
 
-int width, height, n_files;
+int width, height;
+size_t file_count;
 
-int main() {
+int main(int argc, char *argv[]) {
+    
+    
     ofstream log(MASTER_LOG_FILE);
+    streambuf *original = cout.rdbuf();
     cout.rdbuf(log.rdbuf());
     
 
@@ -36,12 +40,7 @@ int main() {
 
     
 
-    n_files = stoi(getenv(NUM_FILES_VAR));
-    cout << "Waiting for " << n_files << " distances files to be written..." << endl;
-    thread monitor_thread(monitor_files, n_files);
-    wait_files(n_files);
-    monitor_thread.join();
-    size_t file_count = count_files();
+    file_count = count_files();
     cout << "Distances files written" << endl;
 
 
@@ -92,7 +91,10 @@ int main() {
     cout << "Comparison finished" << endl;
 
 
-
+    free(all_distances);
+    
     cout << "Execution finished successfully" << endl;
+    cout.rdbuf(original);
+    log.close();
     return EXIT_SUCCESS;
 }

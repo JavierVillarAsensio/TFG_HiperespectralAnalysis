@@ -17,7 +17,6 @@
 
 mutex mtx;
 condition_variable cv;
-int file_count = 0;
 
 int read_hdr(){
     float number;
@@ -181,7 +180,7 @@ void print_separation_line(ofstream &stream){
 }
 
 int write_comparison(int *nearest_materials_image, int *to_compare, size_t distances_size){
-    int comparation[distances_size], coincidences = 0, confusion_matrix[n_files][n_files];
+    int comparation[distances_size], coincidences = 0, confusion_matrix[file_count][file_count];
 
     for(int pixel = 0; pixel < distances_size; pixel++){
         confusion_matrix[nearest_materials_image[pixel]][to_compare[pixel]]++;
@@ -199,18 +198,10 @@ int write_comparison(int *nearest_materials_image, int *to_compare, size_t dista
         return EXIT_FAILURE;
     }
 
-    int columnWidth = 6;
-    out << "lines = material index\tcolumns = count" << endl;
-    out << "\t     " << setw(columnWidth) << 1 << "  |  " << setw(columnWidth) << 2 << "  |  " << setw(columnWidth) << 3 << "  |  " << setw(columnWidth) << 4 << "  |  " << endl;
-    print_separation_line(out);
-    print_separation_line(out);
-    for (int i = 0; i < n_files; i++){
-        out << "\t" << i+1 << "  ||";
-        for (int j = 0; j < n_files; j++){
-            out << setw(columnWidth) << confusion_matrix[i][j] << "  |  ";
-        }
+    for(int i = 0; i < file_count; i++){
+        for(int j = 0; j < file_count; j++)
+            out << confusion_matrix[i][j] << " ";
         out << endl;
-        print_separation_line(out);
     }
 
     const int channels = 3; //RGB
@@ -249,7 +240,7 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
     matvar_t *matvar;
     int aux_to_compare[distances_size];
     
-    string materials_groundtruth[n_files] =
+    string materials_groundtruth[file_count] =
     {
         "vegetation", //0
         "water",      //1
@@ -257,14 +248,15 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
         "manmade"        //3
     };    
 
-    int index_translation[n_files];
+    int index_translation[file_count];
     string material;
-    for(int n_materials = 0; n_materials < n_files; n_materials++){
+    for(int n_materials = 0; n_materials < file_count; n_materials++){
         size_t posicion = materials[n_materials].find('.');
         material = materials[n_materials].substr(0, posicion);
-        for (int n_materials_groundtruth = 0; n_materials_groundtruth < n_files; n_materials_groundtruth++){
+        for (int n_materials_groundtruth = 0; n_materials_groundtruth < file_count; n_materials_groundtruth++){
             if(material.compare(materials_groundtruth[n_materials_groundtruth]) == 0){
                 index_translation[n_materials_groundtruth] = n_materials;
+                break;
             }
         }
     }
@@ -281,7 +273,7 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
         unsigned xSize = matVar->nbytes / matVar->data_size;
         const double *xData = static_cast<const double*>(matVar->data);
 
-        int n_pixels_to_compare = xSize/n_files;
+        int n_pixels_to_compare = xSize/file_count;
         double abundance, aux_abundance;
         int most_abundant;
         for(int pixel=0; pixel<n_pixels_to_compare; pixel++)
@@ -289,9 +281,9 @@ int compare_result(int *nearest_materials_image, size_t distances_size, string *
             abundance = FLOAT_MIN;
             most_abundant = -1;
             
-            for (int mat_index = 0; mat_index < n_files; mat_index++)
+            for (int mat_index = 0; mat_index < file_count; mat_index++)
             {
-                aux_abundance = xData[(pixel*n_files) + mat_index];
+                aux_abundance = xData[(pixel*file_count) + mat_index];
                 if(aux_abundance > abundance){
                     abundance = aux_abundance;
                     most_abundant = mat_index;
