@@ -28,9 +28,9 @@ constexpr float WAVELENGTHS[TEST_BANDS] = {2.0, 4.0};
 
 ////////////IMAGE DATA////////////
 constexpr short int TESTING_IMG[TEST_BANDS * TEST_SAMPLES * TEST_LINES] = {
-    9000, 11000,   19000, 21000,   8000, 12000,
-    18000, 22000,   10000, 10000,   20000, 20000,
-    8000, 12000,   19000, 21000,   9000, 11000
+    900, 1100,   1900, 2100,   800, 1200,
+    1800, 2200,   1000, 1000,   2000, 2000,
+    800, 1200,   1900, 2100,   900, 1100
 };
 size_t TESTING_IMG_N_ELEMENTS = sizeof(TESTING_IMG) / sizeof(TESTING_IMG[0]);
 

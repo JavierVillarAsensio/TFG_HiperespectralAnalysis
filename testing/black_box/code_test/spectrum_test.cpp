@@ -9,7 +9,8 @@
 
 using namespace std;
 
-int width, height, n_channels, header_offset, n_files;
+int width, height, n_channels, header_offset;
+size_t file_count;
 string wavelength_unit_hdr;
 
 int write_test_img_bil(){
@@ -99,7 +100,7 @@ int check_read_image_bil(float *read_img){
     for(int index = 0; index < (TEST_BANDS * TEST_LINES * TEST_SAMPLES); index++){
         //                              column offset                               band offset                                  line offset
         calculated_index = (int)((index%TEST_SAMPLES)*TEST_BANDS)   +   (int)((index/TEST_SAMPLES)%TEST_BANDS)   +   (int)((index/line_length)*line_length);
-        if(!compare_floats_eq(read_img[index], (float)TESTING_IMG[calculated_index]/TEST_SCALE_FACTOR))
+        if(!compare_floats_eq(read_img[index], (float)TESTING_IMG[calculated_index]/PERCENTAGE_REFACTOR))
             return EXIT_FAILURE;
     }
 
@@ -111,8 +112,8 @@ int check_calculation_distances(float *calculated_distances, int spec_index){
 
     for(int index = 0; index < (height * width); index += 2){
         sum = 0;
-        sum = pow(((TESTING_IMG[index]/TEST_SCALE_FACTOR) - spec_reflectance), 2.0) +
-              pow(((TESTING_IMG[index + 1]/TEST_SCALE_FACTOR) - spec_reflectance), 2.0);
+        sum = pow(((TESTING_IMG[index]/PERCENTAGE_REFACTOR) - spec_reflectance), 2.0) +
+              pow(((TESTING_IMG[index + 1]/PERCENTAGE_REFACTOR) - spec_reflectance), 2.0);
 
         if(!compare_floats_eq(calculated_distances[(index/TEST_BANDS)+(index%TEST_BANDS)], sqrt(sum)))
             return EXIT_FAILURE;
@@ -189,7 +190,8 @@ int testing_static(){
             tests_passed++;
         cout << "\tTEST 4: Calculate distance between reference and image: " << TEST_RESULTS[test_result] << endl;
         
-
+        if(create_needed_directories(OUTPUT_DISTANCES_FOLDER))
+            return EXIT_FAILURE;
         if(write_distances_file(distances, get_output_file_name(filename, OUTPUT_DISTANCES_FOLDER, OUTPUT_DISTANCES_EXTENSION)))
             return EXIT_FAILURE;
         
