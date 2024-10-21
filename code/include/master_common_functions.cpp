@@ -115,7 +115,7 @@ void find_nearest_materials(int file_count, size_t distances_size, float *all_di
 
 int write_jpg(int *nearest_materials_image, size_t distances_size){
     
-    const int channels = 3; //RGB
+    const int channels = 3, given_colours = 10; //RGB and given colours
     int colors[10 * channels] = {
         255, 0, 0,      //red
         0, 255, 0,      //green
@@ -130,11 +130,12 @@ int write_jpg(int *nearest_materials_image, size_t distances_size){
     };
 
     unsigned char* image = new unsigned char[width * height * channels];
-
+    int calculated_index;
     for (int i = 0; i < distances_size; i++){
-        image[channels * i] = static_cast<unsigned char>(colors[nearest_materials_image[i] * channels]);
-        image[(channels * i) + 1] = static_cast<unsigned char>(colors[(nearest_materials_image[i] * channels) + 1]);
-        image[(channels * i) + 2] = static_cast<unsigned char>(colors[(nearest_materials_image[i] * channels) + 2]);
+        calculated_index = (nearest_materials_image[i] * channels) % given_colours; //in case there are more materiales (performance test)
+        image[channels * i] = static_cast<unsigned char>(colors[calculated_index]);
+        image[(channels * i) + 1] = static_cast<unsigned char>(colors[calculated_index + 1]);
+        image[(channels * i) + 2] = static_cast<unsigned char>(colors[calculated_index + 2]);
     }
 
     if (!stbi_write_jpg(RESULT_FILE, width, height, channels, image, 100)) {

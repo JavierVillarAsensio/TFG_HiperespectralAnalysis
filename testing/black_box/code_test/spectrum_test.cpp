@@ -39,7 +39,6 @@ int write_test_img_bil(){
 void get_test_spectrums(string *specs_filenames){
     int index = 0;
     filesystem::path path = filesystem::current_path().parent_path();
-    cout << "path:" << path << endl;
     for (const auto& entry : filesystem::directory_iterator(TEST_SPEC_FILE_PATH)) {
         if(index == N_TEST_SPECTRUM_FILES)
             break;

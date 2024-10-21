@@ -22,7 +22,12 @@ int width, height;
 size_t file_count;
 
 int main(int argc, char *argv[]) {
-    
+    int input = 0;
+    if(argc > 1){
+        char *program_input = argv[1];
+        if(strcmp(program_input, PERFORMANCE) == 0)
+            input = PERFORMANCE_OPTION;
+    }
     
     ofstream log(MASTER_LOG_FILE);
     streambuf *original = cout.rdbuf();
@@ -85,10 +90,13 @@ int main(int argc, char *argv[]) {
 
 
 
-    cout << "Comparing with groundtruth..." << endl;
-    if(compare_result(nearest_materials_image, distances_size, materials))
-        return EXIT_FAILURE;
-    cout << "Comparison finished" << endl;
+    if(!input == PERFORMANCE_OPTION){ //the comparison is prepared only for given solution
+        cout << "Comparing with groundtruth..." << endl;
+        if(compare_result(nearest_materials_image, distances_size, materials))
+            return EXIT_FAILURE;
+        cout << "Comparison finished" << endl;
+    }
+    
 
 
     free(all_distances);

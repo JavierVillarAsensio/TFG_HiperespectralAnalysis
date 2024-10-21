@@ -319,7 +319,6 @@ int write_distances_file(float *distances, const string output_file){
         return EXIT_FAILURE;
     }
 
-    cout << output_file << ":" << distances[0] << endl;
     for(int i = 0; i < 10000; i++)
         //cout << distances[i] << endl;
 

@@ -67,4 +67,7 @@ constexpr int SCALE_FACTORS[SIZE_OF_KNOWN_METRICS] = {6, 9, 10, 12};
 #define N_FILES_FILE "n_files.txt"
 #define MAT_FILE "jasperRidge2_R198/end4.mat"
 
+#define PERFORMANCE "performance"
+constexpr int PERFORMANCE_OPTION = 1;
+
 #endif

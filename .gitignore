@@ -7,3 +7,5 @@ output/*.txt
 output/*.jpg
 *.pdf
 .vscode/
+perf_specs/*
+perf/*.txt

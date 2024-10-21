@@ -52,6 +52,11 @@ compile_test:
 test: clean compile_test
 	./$(exe_test)
 
+
+
+performance: run_spec compile_master
+	./$(exe_master) "performance"
+
 clean:
 	rm -f $(exe_spec)
 	rm -f $(exe_master)
