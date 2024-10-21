@@ -9,3 +9,4 @@ output/*.jpg
 .vscode/
 perf_specs/*
 perf/*.txt
+testing/jasperRidge2_R198_test/*.img
