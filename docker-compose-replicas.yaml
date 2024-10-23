@@ -1,0 +1,26 @@
+services:
+  replica:
+    image: hiperespectral-replica
+    user: "1000:1000" 
+    env_file:
+      - specs.env
+    build:
+      context: .
+      dockerfile: Docker_images/Dockerfile_replicas
+    volumes:
+      - ./output:/hiperespectral/output
+      - ./spectrums:/hiperespectral/spectrums
+
+  master:
+    image: hiperespectral-master
+    user: "1000:1000"
+    env_file:
+      - specs.env
+    build:
+      context: .
+      dockerfile: Docker_images/Dockerfile_master
+    volumes:
+      - ./output:/hiperespectral/output
+
+#<user: "1000:1000"> this makes the host have the same permissions as docker so created directories/files can be removed easily without using chmod
+#1000 is the id of the user and the group commonly in linux but it may be different onn each system

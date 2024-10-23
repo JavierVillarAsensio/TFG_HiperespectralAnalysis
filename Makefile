@@ -6,6 +6,7 @@ flags = `pkg-config opencv4 --cflags --libs`
 
 output_folder = output/
 code_folder = code/
+perf_folder = perf/
 
 include_folder = code/include
 lib_compare = lmatio
@@ -25,7 +26,7 @@ code_test = spectrum_test.cpp
 exe_test = test
 img_test = testing/black_box/jasperRidge2_R198_test/jasperRidge2_R198.img
 
-all: run_spec run_master
+static_execution: run_spec run_master
 
 compile_master:
 	g++ -I./$(include_folder) $(include_folder)/$(master_funcs) $(code_folder)$(code_master) -o $(exe_master) -$(lib_compare)

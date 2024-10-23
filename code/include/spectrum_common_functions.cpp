@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <cctype>
 #include <string>
+#include <cerrno>
 #include "config.h"
 
 using namespace std;
@@ -312,15 +313,12 @@ void print_img(float *distances) {
 
 int write_distances_file(float *distances, const string output_file){
     size_t distances_size = (height * width)*sizeof(float);
-
+    cout << "file: " << output_file << endl;
     ofstream out(output_file, ios::binary);
     if(!out){
-        cout << "Error writing distances file. Aborting..." << endl;
+        cout << "Error writing distances file: " << strerror(errno) << ". Aborting..." << endl;
         return EXIT_FAILURE;
     }
-
-    for(int i = 0; i < 10000; i++)
-        //cout << distances[i] << endl;
 
     out.write(reinterpret_cast<char*>(distances), distances_size);
     out.close();
@@ -335,14 +333,13 @@ int get_index() {
     if (pos != string::npos)
         numberStr = value.substr(pos + 1);
 
-
     return stoi(numberStr);
 }
 
 string get_spectrum_file_name() {
     int hostname_index = get_index(), index = 0;
-    
     string path;
+
     for (const auto& entry : filesystem::directory_iterator(SPECTRUM_FOLDER)) {
         if (entry.is_regular_file()) {
             if(index == hostname_index-1){

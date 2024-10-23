@@ -1,0 +1,42 @@
+Performance with 4 spectrums (proposed result)
+make: *** No hay ninguna regla para construir el objetivo 'performance'.  Alto.
+
+real	0m0,008s
+user	0m0,004s
+sys	0m0,003s
+
+
+
+Performance with 8 spectrums
+make: *** No hay ninguna regla para construir el objetivo 'performance'.  Alto.
+
+real	0m0,006s
+user	0m0,002s
+sys	0m0,004s
+
+
+
+Performance with 12 spectrums
+make: *** No hay ninguna regla para construir el objetivo 'performance'.  Alto.
+
+real	0m0,006s
+user	0m0,003s
+sys	0m0,002s
+
+
+
+Performance with 16 spectrums
+make: *** No hay ninguna regla para construir el objetivo 'performance'.  Alto.
+
+real	0m0,003s
+user	0m0,001s
+sys	0m0,002s
+
+
+
+Performance with 20 spectrums
+make: *** No hay ninguna regla para construir el objetivo 'performance'.  Alto.
+
+real	0m0,002s
+user	0m0,001s
+sys	0m0,001s

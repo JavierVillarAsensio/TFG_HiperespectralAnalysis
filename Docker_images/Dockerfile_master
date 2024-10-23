@@ -7,12 +7,16 @@ RUN apt-get update && \
 
 WORKDIR /hiperespectral
 
-COPY master.cpp /hiperespectral
-COPY jasperRidge2_R198/jasperRidge2_R198.hdr /hiperespectral/jasperRidge2_R198/jasperRidge2_R198.hdr
-COPY jasperRidge2_R198/end4.mat /hiperespectral/jasperRidge2_R198/end4.mat
-COPY include/stb_image_write.h /hiperespectral/include/stb_image_write.h
+COPY /code/master.cpp /hiperespectral
+COPY /code/include/stb_image_write.h /hiperespectral
+COPY /code/include/master_common_functions.h /hiperespectral
+COPY /code/include/master_common_functions.cpp /hiperespectral
+COPY /code/include/config.h /hiperespectral
+
+COPY /jasperRidge2_R198/jasperRidge2_R198.hdr /hiperespectral/jasperRidge2_R198/jasperRidge2_R198.hdr
+COPY /jasperRidge2_R198/end4.mat /hiperespectral/jasperRidge2_R198/end4.mat
 
 RUN apt-get install libmatio-dev -y
-RUN g++ master.cpp -o master -I ./include -lmatio
+RUN g++ -I. master_common_functions.cpp master.cpp -o master -lmatio
 
 CMD ["./master"]

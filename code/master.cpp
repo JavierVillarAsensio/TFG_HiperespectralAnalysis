@@ -18,7 +18,8 @@
 using namespace std;
 //using namespace cv;
 
-int width, height, n_files;
+int width, height;
+size_t file_count;
 
 int main() {
     ofstream log(MASTER_LOG_FILE);
@@ -36,10 +37,10 @@ int main() {
 
     
 
-    n_files = stoi(getenv(NUM_FILES_VAR));
-    cout << "Waiting for " << n_files << " distances files to be written..." << endl;
-    thread monitor_thread(monitor_files, n_files);
-    wait_files(n_files);
+    file_count = stoi(getenv(NUM_FILES_VAR));
+    cout << "Waiting for " << file_count << " distances files to be written..." << endl;
+    thread monitor_thread(monitor_files, file_count);
+    wait_files(file_count);
     monitor_thread.join();
     size_t file_count = count_files();
     cout << "Distances files written" << endl;
@@ -85,12 +86,13 @@ int main() {
     cout << "Legend written" << endl;
 
 
-
-    cout << "Comparing with groundtruth..." << endl;
-    if(compare_result(nearest_materials_image, distances_size, materials))
-        return EXIT_FAILURE;
-    cout << "Comparison finished" << endl;
-
+    if(file_count < 5){
+        cout << "Comparing with groundtruth..." << endl;
+        if(compare_result(nearest_materials_image, distances_size, materials))
+            return EXIT_FAILURE;
+        cout << "Comparison finished" << endl;
+    }
+    
 
 
     cout << "Execution finished successfully" << endl;

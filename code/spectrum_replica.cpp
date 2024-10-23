@@ -17,8 +17,15 @@
 
 using namespace std;
 
+int width, height, n_channels, header_offset, n_files;
+string wavelength_unit_hdr;
+
 int main(){
     cout << "Starting program..." << endl;
+    if(create_needed_directories(OUTPUT_DISTANCES_FOLDER) || create_needed_directories(OUTPUT_LOG_FOLDER)){
+        cout << "Error creating needed directories. Aborting..." << endl;
+        return EXIT_FAILURE;
+    }
     string file_path = get_spectrum_file_name();
     string log_file = get_output_file_name(file_path, OUTPUT_LOG_FOLDER, OUTPUT_LOG_EXTENSION);
     ofstream log(log_file);

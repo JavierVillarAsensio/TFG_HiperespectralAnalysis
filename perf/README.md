@@ -1,0 +1,1 @@
+This scripts have to be executed *in this directory* because the path are written based on that.

@@ -1,11 +1,7 @@
 spec
 master
 test
-output/distances/*
-output/logs/*
-output/*.txt
-output/*.jpg
-*.pdf
+output/*
 .vscode/
 perf_specs/*
 perf/*.txt
