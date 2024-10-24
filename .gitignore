@@ -1,7 +1,9 @@
+.vscode/
 spec
 master
 test
 output/*
 perf_specs/*
 perf/*.txt
+testing/black_box/*.png
 testing/jasperRidge2_R198_test/*.img

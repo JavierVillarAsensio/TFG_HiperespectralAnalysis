@@ -1,0 +1,4 @@
+1: manmade.road.tar.solid.all.0100uuutar.jhu.becknic   =>   Red
+2: water.tapwater.none.liquid.all.tapwater.jhu.becknic   =>   Green
+3: soil.mollisol.cryoboroll.none.all.85p4663.jhu.becknic   =>   Blue
+4: vegetation.tree.eucalyptus.maculata.vswir.jpl087.jpl.asd   =>   Yellow
