@@ -1,6 +1,6 @@
 #!/bin/bash
 file=compose_times.txt
-file_path=perf/
+file_path=performance/
 rm -f $file
 
 echo "Performance with 4 spectrums (proposed result) with docker compose:" > $file
@@ -44,4 +44,4 @@ sed -i '/sys/d' $file
 sed -i '/user/d' $file
 rm ../spectrums/meteorites*
 
-cp $file ../charts
+grep "real" $file > ../charts/compose_times.txt

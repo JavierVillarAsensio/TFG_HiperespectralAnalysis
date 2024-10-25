@@ -1,0 +1,23 @@
+Performance with 4 spectrums (proposed result)
+
+real	0m1,505s
+
+
+Performance with 8 spectrums
+
+real	0m1,591s
+
+
+Performance with 12 spectrums
+
+real	0m1,692s
+
+
+Performance with 16 spectrums
+
+real	0m1,808s
+
+
+Performance with 20 spectrums
+
+real	0m1,911s

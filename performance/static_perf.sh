@@ -25,4 +25,4 @@ sed -i '/sys/d' $file
 sed -i '/user/d' $file
 rm ../spectrums/meteorites*
 
-cp $file ../charts
+grep "real" $file > ../charts/static_times.txt
