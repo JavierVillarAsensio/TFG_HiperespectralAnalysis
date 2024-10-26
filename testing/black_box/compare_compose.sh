@@ -23,3 +23,6 @@ popd
 
 compare result_static.jpg result_compose.jpg compared_results.png
 rm *.jpg
+
+xdg-open compared_results.png #if the pixels in the image have a WHITE filter, it means the comparison mathces
+                              #if the pixels in the image have a RED filter, it means the comparison does not match

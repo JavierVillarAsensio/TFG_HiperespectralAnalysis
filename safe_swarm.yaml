@@ -5,7 +5,7 @@ services:
     environment:
       TASK_ID: "{{.Task.Slot}}"
     deploy:
-      replicas: 12
+      replicas: 4
       restart_policy:
         condition: on-failure
     volumes:
@@ -16,7 +16,7 @@ services:
     image: hiperespectral-master
     user: "1000:1000"
     environment:
-      NUM_FILES: 12
+      NUM_FILES: 4
     deploy:
       replicas: 1
       restart_policy:
