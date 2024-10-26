@@ -11,3 +11,4 @@ charts/charts_env/
 charts/*.txt
 charts/*.png
 specs.env
+spectrums/meteorite*
