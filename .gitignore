@@ -10,3 +10,4 @@ testing/jasperRidge2_R198_test/*.img
 charts/charts_env/
 charts/*.txt
 charts/*.png
+specs.env

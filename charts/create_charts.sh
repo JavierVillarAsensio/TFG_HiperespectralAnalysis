@@ -6,10 +6,6 @@ folder=output/
 static=static_times.txt
 compose=compose_times.txt
 
-rm -f $conf
-rm -f $leg
-rm -f $static
-rm -f $compose
 rm -f *.png
 
 echo "Wait while charts are being created"

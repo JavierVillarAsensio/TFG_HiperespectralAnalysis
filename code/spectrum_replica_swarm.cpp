@@ -26,7 +26,14 @@ int main(){
         cout << "Error creating needed directories. Aborting..." << endl;
         return EXIT_FAILURE;
     }
-    string file_path = get_spectrum_file_name();
+    const char *var = "TASK_ID";
+    const char *id = getenv(var);
+    if(!id){
+        cout << "Error getting container id. Aborting" << endl;
+        return EXIT_FAILURE;
+    }
+
+    string file_path = get_spectrum_file_name(atoi(id));
     string log_file = get_output_file_name(file_path, OUTPUT_LOG_FOLDER, OUTPUT_LOG_EXTENSION);
     ofstream log(log_file);
     cout.rdbuf(log.rdbuf()); //This redirects standard output to a file, to save the execution steps in a log file

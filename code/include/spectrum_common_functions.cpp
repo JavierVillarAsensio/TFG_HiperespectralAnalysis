@@ -336,10 +336,14 @@ int get_index() {
     return stoi(numberStr);
 }
 
-string get_spectrum_file_name() {
-    int hostname_index = get_index(), index = 0;
+string get_spectrum_file_name(int given_index) {
+    int hostname_index, index = 0;
+    if(given_index == -1)
+        hostname_index = get_index();
+    else
+        hostname_index = given_index;
+    
     string path;
-
     for (const auto& entry : filesystem::directory_iterator(SPECTRUM_FOLDER)) {
         if (entry.is_regular_file()) {
             if(index == hostname_index-1){

@@ -1,0 +1,20 @@
+FROM ubuntu
+
+RUN apt-get update && apg-get install -y \
+build-essential 
+
+FROM gcc:latest
+
+WORKDIR /hiperespectral
+
+COPY /code/spectrum_replica_swarm.cpp /hiperespectral
+COPY /code/include/spectrum_common_functions.h /hiperespectral
+COPY /code/include/spectrum_common_functions.cpp /hiperespectral
+COPY /code/include/config.h /hiperespectral
+
+COPY /jasperRidge2_R198/jasperRidge2_R198.hdr /hiperespectral/jasperRidge2_R198/jasperRidge2_R198.hdr
+COPY /jasperRidge2_R198/jasperRidge2_R198.img /hiperespectral/jasperRidge2_R198/jasperRidge2_R198.img
+
+RUN g++ -I. spectrum_common_functions.cpp spectrum_replica_swarm.cpp -o spec
+
+CMD [ "./spec"]
