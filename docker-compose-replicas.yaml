@@ -10,6 +10,7 @@ services:
     volumes:
       - ./output:/hiperespectral/output
       - ./spectrums:/hiperespectral/spectrums
+    restart: no
 
   master:
     image: hiperespectral-master

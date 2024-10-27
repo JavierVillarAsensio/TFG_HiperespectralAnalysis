@@ -1,0 +1,19 @@
+Performance with 4 spectrums (proposed result) in static version:
+
+real	0m1,678s
+
+Performance with 8 spectrums in static version:
+
+real	0m1,588s
+
+Performance with 12 spectrums in static version:
+
+real	0m1,678s
+
+Performance with 16 spectrums in static version:
+
+real	0m1,825s
+
+Performance with 20 spectrums in static version:
+
+real	0m1,924s
