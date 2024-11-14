@@ -7,6 +7,7 @@ confusion_matrix_file = 'confusion_matrix.txt'
 legend_file = 'legend.txt'
 static_times_file = 'static_times.txt'
 compose_times_file = 'compose_times.txt'
+swarm_times_file = 'swarm_times.txt'
 
 def confusion_matrix():
     cm = []
@@ -67,6 +68,9 @@ def main():
 
     if os.path.exists(compose_times_file):
         bar_chart(compose_times_file)
+
+    if os.path.exists(swarm_times_file):
+        bar_chart(swarm_times_file)
 
 if __name__ == "__main__":
     main()

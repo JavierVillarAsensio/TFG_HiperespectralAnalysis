@@ -22,6 +22,7 @@ popd > /dev/null
 pushd ../performance > /dev/null
 ./static_perf.sh > /dev/null 2>&1
 ./compose_perf.sh > /dev/null 2>&1
+./swarm_perf.sh > /dev/null 2>&1
 popd > /dev/null
 
 python3 create_charts.py
