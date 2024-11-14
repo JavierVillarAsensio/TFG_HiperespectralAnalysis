@@ -58,6 +58,9 @@ int read_hdr(){
 int count_files() {
     int count = 0;
 
+    if (!filesystem::exists(DISTANCES_FOLDER) || !filesystem::is_directory(DISTANCES_FOLDER))
+        return count;
+
     for (const auto& entry : filesystem::directory_iterator(DISTANCES_FOLDER)) {
         if (entry.is_regular_file()) 
             count++;

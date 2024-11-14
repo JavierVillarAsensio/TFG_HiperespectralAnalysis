@@ -28,10 +28,8 @@ int main() {
 
 
     cout << "Starting master..." << endl;
-    if(read_hdr())
-        return EXIT_FAILURE;
-    if (!filesystem::exists(DISTANCES_FOLDER) || !filesystem::is_directory(DISTANCES_FOLDER)){
-        cout << "The folder does not exist. Aborting..." << endl;
+    if(read_hdr()){
+        cout << "Error reading .hdr file. Aborting..." << endl;
         return EXIT_FAILURE;
     }
 
@@ -94,7 +92,7 @@ int main() {
     }
     
 
-
+    free(all_distances);
     cout << "Execution finished successfully" << endl;
     return EXIT_SUCCESS;
 }

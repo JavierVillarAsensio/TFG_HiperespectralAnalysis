@@ -2,35 +2,28 @@ Performance with 4 spectrums (proposed result) with docker swarm:
 Since --detach=false was not specified, tasks will be created in the background.
 In a future release, --detach=false will become the default.
 
-real	0m4,772s
+real	0m7,751s
 
 Performance with 8 spectrums with docker swarm:
-Error response from daemon: service master not found
-service update paused: update paused due to failure or early termination of task bgb49whbwipy1qd9u4z9bdcne
-service update paused: update paused due to failure or early termination of task w71kv8awtr022pt2rivmfxy7r
+Since --detach=false was not specified, tasks will be created in the background.
+In a future release, --detach=false will become the default.
 
-real	0m47,333s
+real	0m7,956s
 
 Performance with 12 spectrums with docker swarm:
-Error response from daemon: service master not found
-tfg-hiperespectral-analysis_replica: service update paused: update paused due to failure or early termination of task wb7rri4b5k4hxv022a2xhph0m
-service update paused: update paused due to failure or early termination of task m60tak89jf1vjnktp1qvdtfol
-service update paused: update paused due to failure or early termination of task kolnmtvalytfie5e0i341altn
+Since --detach=false was not specified, tasks will be created in the background.
+In a future release, --detach=false will become the default.
 
-real	0m12,339s
+real	0m8,592s
 
 Performance with 16 spectrums with docker swarm:
-Error response from daemon: service master not found
-tfg-hiperespectral-analysis_replica: service update paused: update paused due to failure or early termination of task iqs0bcnf84s9ky0wsrqn2yise
-service update paused: update paused due to failure or early termination of task k55syl49c9sovdormgj0kig3d
-service update paused: update paused due to failure or early termination of task zut1mv32u63igcwswy5pccu8a
+Since --detach=false was not specified, tasks will be created in the background.
+In a future release, --detach=false will become the default.
 
-real	0m10,604s
+real	0m8,641s
 
 Performance with 20 spectrums with docker swarm:
-Error response from daemon: service master not found
-tfg-hiperespectral-analysis_replica: service update paused: update paused due to failure or early termination of task 5phycaldu72ugi5h1bxultm7i
-service update paused: update paused due to failure or early termination of task tmueao75ildo3ie5fcj86hsgc
-service update paused: update paused due to failure or early termination of task 2r6kxyqynaevduf03ylx7oada
+Since --detach=false was not specified, tasks will be created in the background.
+In a future release, --detach=false will become the default.
 
-real	0m10,396s
+real	0m9,551s
